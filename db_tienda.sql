@@ -236,8 +236,8 @@ CREATE TABLE IF NOT EXISTS `tbl_usuario` (
 DELETE FROM `tbl_usuario`;
 /*!40000 ALTER TABLE `tbl_usuario` DISABLE KEYS */;
 INSERT INTO `tbl_usuario` (`usuario_id`, `usuario_nombres`, `usuario_email`, `usuario_password`, `usuario_created_date`, `usuario_updated_date`, `usuario_estado`, `rol_id`) VALUES
-	(1, 'ADMIN', 'admin@admin.com', 'QTgyTDFRM1JNS2JxRVVVak5NNVZoUT09', '2022-02-22 15:22:33', '2022-02-22 15:22:33', 1, 1),
-  (2, 'EMPLEADO', 'empleado@empleado.com', 'QXRIeTBwRWNoV1ZOdXpKTmVrdmN3dz09', '2022-02-22 15:22:33', '2022-02-22 15:22:33', 1, 2);
+	(1, 'ADMINISTRADOR', 'admin@superdesechables.com', 'QTgyTDFRM1JNS2JxRVVVak5NNVZoUT09', '2022-02-22 15:22:33', '2022-02-22 15:22:33', 1, 1),
+  (2, 'EMPLEADO', 'empleado@superdesechables.com', 'QXRIeTBwRWNoV1ZOdXpKTmVrdmN3dz09', '2022-02-22 15:22:33', '2022-02-22 15:22:33', 1, 2);
 /*!40000 ALTER TABLE `tbl_usuario` ENABLE KEYS */;
 
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
