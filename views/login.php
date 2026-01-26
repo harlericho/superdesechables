@@ -64,22 +64,6 @@
           </div>
           <!-- /.col -->
         </div>
-        <!-- agregar este sistema fu creado por soluionesitec.com  footer-->
-        <br />
-        <footer class="text-center">
-          <small>
-            &copy; <?= date('Y') ?> SolucionesITEC
-            <br />
-            Desarrollado por <a href="https://solucionesitec.com" target="_blank">Soluciones ITEC</a>
-
-          </small>
-          <small>
-            &copy; <?= date('Y') ?> SolucionesITEC
-            <br />
-            Desarrollado por <a href="https://solucionesitec.com" target="_blank">Soluciones ITEC</a>
-
-          </small>
-        </footer>
       </form>
       <!-- <br/>
                 <a href="registro.php" class="text-center">Registrarse</a> -->
