@@ -71,6 +71,7 @@
             &copy; <?= date('Y') ?> SolucionesITEC
             <br />
             Desarrollado por <a href="https://solucionesitec.com" target="_blank">Soluciones ITEC</a>
+
           </small>
         </footer>
       </form>
