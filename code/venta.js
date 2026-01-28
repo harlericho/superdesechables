@@ -338,7 +338,8 @@ const app = new (function () {
                 const facturaId = data.factura_id;
                 window.open(
                   "../controllers/factura/facturaPdfController.php?factura_id=" +
-                    facturaId,
+                    facturaId +
+                    "&enviar=1",
                   "_blank",
                 );
               });

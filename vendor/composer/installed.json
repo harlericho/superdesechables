@@ -1,118 +1,191 @@
 {
-    "packages": [
+  "packages": [
+    {
+      "name": "mike42/escpos-php",
+      "version": "v4.0",
+      "version_normalized": "4.0.0.0",
+      "source": {
+        "type": "git",
+        "url": "https://github.com/mike42/escpos-php.git",
+        "reference": "74fd89a3384135c90a8c6dc4b724e03df7c0e4f9"
+      },
+      "dist": {
+        "type": "zip",
+        "url": "https://api.github.com/repos/mike42/escpos-php/zipball/74fd89a3384135c90a8c6dc4b724e03df7c0e4f9",
+        "reference": "74fd89a3384135c90a8c6dc4b724e03df7c0e4f9",
+        "shasum": ""
+      },
+      "require": {
+        "ext-intl": "*",
+        "ext-json": "*",
+        "ext-zlib": "*",
+        "mike42/gfx-php": "^0.6",
+        "php": ">=7.3.0"
+      },
+      "require-dev": {
+        "phpunit/phpunit": "^9",
+        "squizlabs/php_codesniffer": "^3.3"
+      },
+      "suggest": {
+        "ext-gd": "Used for image printing if present.",
+        "ext-imagick": "Will be used for image printing if present. Required for PDF printing or use of custom fonts."
+      },
+      "time": "2022-05-23T11:05:09+00:00",
+      "type": "library",
+      "installation-source": "dist",
+      "autoload": {
+        "psr-4": {
+          "Mike42\\": "src/Mike42"
+        }
+      },
+      "notification-url": "https://packagist.org/downloads/",
+      "license": ["MIT"],
+      "authors": [
         {
-            "name": "mike42/escpos-php",
-            "version": "v4.0",
-            "version_normalized": "4.0.0.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/mike42/escpos-php.git",
-                "reference": "74fd89a3384135c90a8c6dc4b724e03df7c0e4f9"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/mike42/escpos-php/zipball/74fd89a3384135c90a8c6dc4b724e03df7c0e4f9",
-                "reference": "74fd89a3384135c90a8c6dc4b724e03df7c0e4f9",
-                "shasum": ""
-            },
-            "require": {
-                "ext-intl": "*",
-                "ext-json": "*",
-                "ext-zlib": "*",
-                "mike42/gfx-php": "^0.6",
-                "php": ">=7.3.0"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "^9",
-                "squizlabs/php_codesniffer": "^3.3"
-            },
-            "suggest": {
-                "ext-gd": "Used for image printing if present.",
-                "ext-imagick": "Will be used for image printing if present. Required for PDF printing or use of custom fonts."
-            },
-            "time": "2022-05-23T11:05:09+00:00",
-            "type": "library",
-            "installation-source": "dist",
-            "autoload": {
-                "psr-4": {
-                    "Mike42\\": "src/Mike42"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Michael Billington",
-                    "email": "michael.billington@gmail.com"
-                }
-            ],
-            "description": "PHP receipt printer library for use with ESC/POS-compatible thermal and impact printers",
-            "homepage": "https://github.com/mike42/escpos-php",
-            "keywords": [
-                "Epson",
-                "barcode",
-                "escpos",
-                "printer",
-                "receipt-printer"
-            ],
-            "support": {
-                "issues": "https://github.com/mike42/escpos-php/issues",
-                "source": "https://github.com/mike42/escpos-php/tree/v4.0"
-            },
-            "install-path": "../mike42/escpos-php"
+          "name": "Michael Billington",
+          "email": "michael.billington@gmail.com"
+        }
+      ],
+      "description": "PHP receipt printer library for use with ESC/POS-compatible thermal and impact printers",
+      "homepage": "https://github.com/mike42/escpos-php",
+      "keywords": ["Epson", "barcode", "escpos", "printer", "receipt-printer"],
+      "support": {
+        "issues": "https://github.com/mike42/escpos-php/issues",
+        "source": "https://github.com/mike42/escpos-php/tree/v4.0"
+      },
+      "install-path": "../mike42/escpos-php"
+    },
+    {
+      "name": "mike42/gfx-php",
+      "version": "v0.6",
+      "version_normalized": "0.6.0.0",
+      "source": {
+        "type": "git",
+        "url": "https://github.com/mike42/gfx-php.git",
+        "reference": "ed9ded2a9298e4084a9c557ab74a89b71e43dbdb"
+      },
+      "dist": {
+        "type": "zip",
+        "url": "https://api.github.com/repos/mike42/gfx-php/zipball/ed9ded2a9298e4084a9c557ab74a89b71e43dbdb",
+        "reference": "ed9ded2a9298e4084a9c557ab74a89b71e43dbdb",
+        "shasum": ""
+      },
+      "require": {
+        "php": ">=7.0.0"
+      },
+      "require-dev": {
+        "phpbench/phpbench": "@dev",
+        "phpunit/phpunit": "^6.5",
+        "squizlabs/php_codesniffer": "^3.3.1"
+      },
+      "time": "2019-10-05T02:44:33+00:00",
+      "type": "library",
+      "installation-source": "dist",
+      "autoload": {
+        "psr-4": {
+          "Mike42\\": "src/Mike42"
+        }
+      },
+      "notification-url": "https://packagist.org/downloads/",
+      "license": ["LGPL-2.1-or-later"],
+      "authors": [
+        {
+          "name": "Michael Billington",
+          "email": "michael.billington@gmail.com"
+        }
+      ],
+      "description": "The pure PHP graphics library",
+      "homepage": "https://github.com/mike42/gfx-php",
+      "support": {
+        "issues": "https://github.com/mike42/gfx-php/issues",
+        "source": "https://github.com/mike42/gfx-php/tree/v0.6"
+      },
+      "install-path": "../mike42/gfx-php"
+    },
+    {
+      "name": "phpmailer/phpmailer",
+      "version": "v7.0.2",
+      "version_normalized": "7.0.2.0",
+      "source": {
+        "type": "git",
+        "url": "https://github.com/PHPMailer/PHPMailer.git",
+        "reference": "ebf1655bd5b99b3f97e1a3ec0a69e5f4cd7ea088"
+      },
+      "dist": {
+        "type": "zip",
+        "url": "https://api.github.com/repos/PHPMailer/PHPMailer/zipball/ebf1655bd5b99b3f97e1a3ec0a69e5f4cd7ea088",
+        "reference": "ebf1655bd5b99b3f97e1a3ec0a69e5f4cd7ea088",
+        "shasum": ""
+      },
+      "require": {
+        "ext-ctype": "*",
+        "ext-filter": "*",
+        "ext-hash": "*",
+        "php": ">=5.5.0"
+      },
+      "require-dev": {
+        "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
+        "doctrine/annotations": "^1.2.6 || ^1.13.3",
+        "php-parallel-lint/php-console-highlighter": "^1.0.0",
+        "php-parallel-lint/php-parallel-lint": "^1.3.2",
+        "phpcompatibility/php-compatibility": "^10.0.0@dev",
+        "squizlabs/php_codesniffer": "^3.13.5",
+        "yoast/phpunit-polyfills": "^1.0.4"
+      },
+      "suggest": {
+        "decomplexity/SendOauth2": "Adapter for using XOAUTH2 authentication",
+        "directorytree/imapengine": "For uploading sent messages via IMAP, see gmail example",
+        "ext-imap": "Needed to support advanced email address parsing according to RFC822",
+        "ext-mbstring": "Needed to send email in multibyte encoding charset or decode encoded addresses",
+        "ext-openssl": "Needed for secure SMTP sending and DKIM signing",
+        "greew/oauth2-azure-provider": "Needed for Microsoft Azure XOAUTH2 authentication",
+        "hayageek/oauth2-yahoo": "Needed for Yahoo XOAUTH2 authentication",
+        "league/oauth2-google": "Needed for Google XOAUTH2 authentication",
+        "psr/log": "For optional PSR-3 debug logging",
+        "symfony/polyfill-mbstring": "To support UTF-8 if the Mbstring PHP extension is not enabled (^1.2)",
+        "thenetworg/oauth2-azure": "Needed for Microsoft XOAUTH2 authentication"
+      },
+      "time": "2026-01-09T18:02:33+00:00",
+      "type": "library",
+      "installation-source": "dist",
+      "autoload": {
+        "psr-4": {
+          "PHPMailer\\PHPMailer\\": "src/"
+        }
+      },
+      "notification-url": "https://packagist.org/downloads/",
+      "license": ["LGPL-2.1-only"],
+      "authors": [
+        {
+          "name": "Marcus Bointon",
+          "email": "phpmailer@synchromedia.co.uk"
         },
         {
-            "name": "mike42/gfx-php",
-            "version": "v0.6",
-            "version_normalized": "0.6.0.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/mike42/gfx-php.git",
-                "reference": "ed9ded2a9298e4084a9c557ab74a89b71e43dbdb"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/mike42/gfx-php/zipball/ed9ded2a9298e4084a9c557ab74a89b71e43dbdb",
-                "reference": "ed9ded2a9298e4084a9c557ab74a89b71e43dbdb",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=7.0.0"
-            },
-            "require-dev": {
-                "phpbench/phpbench": "@dev",
-                "phpunit/phpunit": "^6.5",
-                "squizlabs/php_codesniffer": "^3.3.1"
-            },
-            "time": "2019-10-05T02:44:33+00:00",
-            "type": "library",
-            "installation-source": "dist",
-            "autoload": {
-                "psr-4": {
-                    "Mike42\\": "src/Mike42"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "LGPL-2.1-or-later"
-            ],
-            "authors": [
-                {
-                    "name": "Michael Billington",
-                    "email": "michael.billington@gmail.com"
-                }
-            ],
-            "description": "The pure PHP graphics library",
-            "homepage": "https://github.com/mike42/gfx-php",
-            "support": {
-                "issues": "https://github.com/mike42/gfx-php/issues",
-                "source": "https://github.com/mike42/gfx-php/tree/v0.6"
-            },
-            "install-path": "../mike42/gfx-php"
+          "name": "Jim Jagielski",
+          "email": "jimjag@gmail.com"
+        },
+        {
+          "name": "Andy Prevost",
+          "email": "codeworxtech@users.sourceforge.net"
+        },
+        {
+          "name": "Brent R. Matzelle"
         }
-    ],
-    "dev": true,
-    "dev-package-names": []
+      ],
+      "description": "PHPMailer is a full-featured email creation and transfer class for PHP",
+      "support": {
+        "issues": "https://github.com/PHPMailer/PHPMailer/issues",
+        "source": "https://github.com/PHPMailer/PHPMailer/tree/v7.0.2"
+      },
+      "funding": [
+        {
+          "url": "https://github.com/Synchro",
+          "type": "github"
+        }
+      ],
+      "install-path": "../phpmailer/phpmailer"
+    }
+  ],
+  "dev": true,
+  "dev-package-names": []
 }

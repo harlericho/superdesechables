@@ -53,4 +53,29 @@
   }
   ?>
   <?php require_once '../templates/footer.php'; ?>
+
+  <!-- Modal para reenviar factura por correo -->
+  <div class="modal fade" id="modalCorreo" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <form id="formCorreoFactura">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Reenviar Factura</h5>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" id="facturaIdCorreo" name="factura_id">
+            <div class="form-group">
+              <label for="correoDestino">Correo destino</label>
+              <input type="email" class="form-control" id="correoDestino" name="correo" required>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary">Enviar</button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
   <script src="../code/facturaGA.js"></script>

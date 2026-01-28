@@ -6,22 +6,30 @@ namespace Composer\Autoload;
 
 class ComposerStaticInit870e9b9214bb0fa110f654f69146fd90
 {
-    public static $prefixLengthsPsr4 = array (
+    public static $prefixLengthsPsr4 = array(
+        'P' =>
+        array(
+            'PHPMailer\\PHPMailer\\' => 20,
+        ),
         'M' =>
-        array (
+        array(
             'Mike42\\' => 7,
         ),
     );
 
-    public static $prefixDirsPsr4 = array (
+    public static $prefixDirsPsr4 = array(
+        'PHPMailer\\PHPMailer\\' =>
+        array(
+            0 => __DIR__ . '/..' . '/phpmailer/phpmailer/src',
+        ),
         'Mike42\\' =>
-        array (
+        array(
             0 => __DIR__ . '/..' . '/mike42/escpos-php/src/Mike42',
             1 => __DIR__ . '/..' . '/mike42/gfx-php/src/Mike42',
         ),
     );
 
-    public static $classMap = array (
+    public static $classMap = array(
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
     );
 
@@ -31,7 +39,6 @@ class ComposerStaticInit870e9b9214bb0fa110f654f69146fd90
             $loader->prefixLengthsPsr4 = ComposerStaticInit870e9b9214bb0fa110f654f69146fd90::$prefixLengthsPsr4;
             $loader->prefixDirsPsr4 = ComposerStaticInit870e9b9214bb0fa110f654f69146fd90::$prefixDirsPsr4;
             $loader->classMap = ComposerStaticInit870e9b9214bb0fa110f654f69146fd90::$classMap;
-
         }, null, ClassLoader::class);
     }
 }

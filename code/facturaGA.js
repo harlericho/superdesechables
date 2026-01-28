@@ -49,11 +49,22 @@ const app = new (function () {
               "</b></td>";
             html += "<td><span class='badge bg-green'>Activo</span></td>";
             html +=
-              "<td><button type='button' class='btn btn-danger btn-sm' style='margin-right: 5%;' title='Eliminar' onClick='app.eliminar(" +
+              "<td>" +
+              "<button type='button' class='btn btn-danger btn-sm' style='margin-right: 5%;' title='Eliminar' onClick='app.eliminar(" +
               element.factura_id +
-              ")'><i class= 'fa fa-trash'></i></button> <a href='../controllers/factura/facturaPdfController.php?factura_id=" +
+              ")'><i class= 'fa fa-trash'></i></button> " +
+              "<a href='../controllers/factura/facturaPdfController.php?factura_id=" +
               element.factura_id +
-              "' target='_black' class='btn btn-info btn-sm' title='Pdf'><i class='fa fa-file-pdf-o'></i></a></td>";
+              "' target='_black' class='btn btn-info btn-sm' title='Pdf'><i class='fa fa-file-pdf-o'></i></a> " +
+              "<button type='button' class='btn btn-warning btn-sm' title='Reenviar' onClick='app.abrirModalCorreo(" +
+              element.factura_id +
+              ")'><i class='fa fa-envelope'></i></button>" +
+              "</td>";
+            this.abrirModalCorreo = (factura_id) => {
+              $("#correoDestino").val(""); // Limpiar el input de correo
+              $("#modalCorreo").modal("show");
+              $("#facturaIdCorreo").val(factura_id);
+            };
           });
           html += "</tr></tbody></table>";
           this.facturasActivas.innerHTML = html;
@@ -105,7 +116,7 @@ const app = new (function () {
                 "Se ha procedido anular la factura y devuelto el stock vendido",
                 {
                   icon: "success",
-                }
+                },
               );
               this.listado();
             }
@@ -118,4 +129,34 @@ const app = new (function () {
     });
   };
 })();
+
+// Envío de factura por correo desde el modal
+$(document).ready(function () {
+  $("#formCorreoFactura").on("submit", function (e) {
+    e.preventDefault();
+    var formData = new FormData(this);
+    fetch("../controllers/factura/facturaReenviarCorreoController.php", {
+      method: "POST",
+      body: formData,
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          swal("¡Enviado!", "La factura fue enviada correctamente.", "success");
+        } else {
+          swal(
+            "Error",
+            data.message || "No se pudo enviar la factura.",
+            "error",
+          );
+        }
+        $("#modalCorreo").modal("hide");
+      })
+      .catch(() => {
+        swal("Error", "No se pudo enviar la factura.", "error");
+        $("#modalCorreo").modal("hide");
+      });
+  });
+});
+
 app.listado();
