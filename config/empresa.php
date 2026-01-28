@@ -38,10 +38,25 @@ class Empresa
     $config = self::getConfig();
     return $config['nombre'] ?? '';
   }
+  public static function getTelefono(): string
+  {
+    $config = self::getConfig();
+    return $config['telefono'] ?? '';
+  }
+  public static function getDireccion(): string
+  {
+    $config = self::getConfig();
+    return $config['direccion'] ?? '';
+  }
   public static function getEmail(): string
   {
     $config = self::getConfig();
     return $config['email'] ?? '';
+  }
+  public static function getEmailClientes(): string
+  {
+    $config = self::getConfig();
+    return $config['emailclientes'] ?? '';
   }
   public static function getTitulo1(): string
   {
