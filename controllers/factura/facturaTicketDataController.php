@@ -72,10 +72,12 @@ $ticket .= "\x1B\x40"; // ESC @ - Inicializar
 $ticket .= "\x1B\x61\x01"; // ESC a 1 - Centrar
 $ticket .= "\x1B\x45\x01"; // ESC E 1 - Negrita ON
 $ticket .= "Chimbolema Guaman Segundo Manuel\n";
+// agregar una linea con el nombre: CONTRIBUYENTE NEGOCIO POPULAR - REGIMEN RIMPE
+$ticket .= "CONTRIBUYENTE NEGOCIO POPULAR - REGIMEN RIMPE\n";
 $ticket .= "\x1B\x45\x00"; // ESC E 0 - Negrita OFF
 $ticket .= ($empresa['direccion'] ?? '') . "\n";
-$ticket .= "RUC: " .($empresa['ruc'] ?? '') . "\n";
-$ticket .= "AUTSRI: " .($empresa['autsri'] ?? '') . "\n";
+$ticket .= "RUC: " . ($empresa['ruc'] ?? '') . "\n";
+$ticket .= "AUTSRI: " . ($empresa['autsri'] ?? '') . "\n";
 $ticket .= "Tel: " . ($empresa['telefono'] ?? '') . "\n";
 $ticket .= "Email: segundochimbolema781@gmail.com\n";
 $ticket .= "\n";
@@ -100,9 +102,9 @@ if ($factura['cliente_id']) {
 
 // Encabezado productos
 $ticket .= txtL("Cant", 5) .
-           txtL("Producto", 15) .
-           txtR("V.Unit", 10) .
-           txtR("Total", 10) . "\n";
+  txtL("Producto", 15) .
+  txtR("V.Unit", 10) .
+  txtR("Total", 10) . "\n";
 $ticket .= str_repeat('-', 40) . "\n";
 
 
@@ -115,9 +117,9 @@ foreach ($detalles as $item) {
   $total = "$" . number_format($item['precio_total'], 2);
 
   $ticket .= txtL($cantidad, 5) .
-             txtL($producto, 15) .
-             txtR($vunit, 10) .
-             txtR($total, 10) . "\n";
+    txtL($producto, 15) .
+    txtR($vunit, 10) .
+    txtR($total, 10) . "\n";
 }
 
 $ticket .= str_repeat('-', 40) . "\n\n";
@@ -133,7 +135,7 @@ if ($factura['impuesto'] > 0) {
     txtR("$" . number_format($factura['subtotal'], 2), 12) .
     txtR("$" . number_format($iva, 2), 13) . "\n";
 } else {
-   $ticket .= txtL("IVA(15%)", 15) . txtR("$0,00", 12) . txtR("$0,00", 13) . "\n";
+  $ticket .= txtL("IVA(15%)", 15) . txtR("$0,00", 12) . txtR("$0,00", 13) . "\n";
 }
 
 
@@ -146,14 +148,14 @@ $ticket .= strtoupper($factura['comprobante']) . "\n";
 $ticket .= txtL("Debito:", 10) . txtR("$" . number_format($factura['total'], 2), 15) . "\n";
 
 // Pie
-        $nombreCajero = "Administrador";
-        if ($usuarioId) {
-            $usuario = UsuarioModel::obtenerUsuarioId($usuarioId);
-            if ($usuario && isset($usuario[0]['nombres'])) {
-                $nombreCajero = $usuario[0]['nombres'];
-            }
-        }
-                $ticket .= txtL("Cajero:", 15) . $nombreCajero . "\n\n";
+$nombreCajero = "Administrador";
+if ($usuarioId) {
+  $usuario = UsuarioModel::obtenerUsuarioId($usuarioId);
+  if ($usuario && isset($usuario[0]['nombres'])) {
+    $nombreCajero = $usuario[0]['nombres'];
+  }
+}
+$ticket .= txtL("Cajero:", 15) . $nombreCajero . "\n\n";
 $ticket .= "Terminos y condiciones: 'El cliente debe revisar el producto que recibe, una vez recibida la factura no se recibiran reclamos referentes o atribuibles'.\n";
 $ticket .= "Sistema desarrollado por: www.solucionesitec.com\n";
 $ticket .= "\n\n\n\n";
