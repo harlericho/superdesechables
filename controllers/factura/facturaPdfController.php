@@ -41,7 +41,7 @@ $pdf->AddPage();
 $pdf->SetFont('Arial', 'B', 14);
 
 // Logo y Nombre de Empresa
-$pdf->Image('../../assets/image/pdflogo.png', 10, 10, 40);
+$pdf->Image('../../assets/image/SuperDesechablesLogo.PNG', 10, 10, 40);
 $pdf->SetXY(60, 10);
 $pdf->Cell(90, 10, Empresa::getNombre(), 0, 1, 'L');
 $pdf->SetFont('Arial', '', 10);
