@@ -81,7 +81,7 @@ foreach (LoginModel::existeUsuarioEmailLogin($_SESSION['email']) as $key => $val
     <!-- Sidebar user panel -->
     <div class="user-panel">
       <div class="pull-left image">
-        <img src="../assets/image/SuperDesechablesLogo.PNG" class="img-circle" alt="User Image">
+        <img src="../assets/image/<?= Empresa::getLogoLogin() ?>" class="img-circle" alt="User Image">
       </div>
       <div class="pull-left info">
         <p><?= Empresa::getNombre() ?></p>

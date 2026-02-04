@@ -132,7 +132,7 @@
                   </div>
                 </div>
                 <div class="form-group col-md-6">
-                  <label for="codigo">Comprobante</label>
+                  <label for="codigo">Forma de pago</label>
                   <div id="selectorFormapago"></div>
                 </div>
                 <div class="form-group col-md-12">
@@ -299,4 +299,4 @@
 
   <?php require_once '../templates/footer.php'; ?>
   <script src="../code/qz-tray.js"></script>
-<script src="../code/venta.js"></script>
+  <script src="../code/venta.js"></script>

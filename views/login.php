@@ -24,13 +24,32 @@
 
   <!-- Favicon -->
   <link rel="shortcut icon" href="../assets/image/SuperDesechablesLogo.PNG" type="image/x-icon">
+  <style>
+    .login-logo {
+      text-align: center;
+    }
+
+    .login-logo a {
+      display: inline-block;
+      max-width: 100%;
+      word-wrap: break-word;
+      line-height: 1.2;
+    }
+
+    @media (max-width: 480px) {
+      .login-box {
+        width: 90% !important;
+        margin: 5% auto !important;
+      }
+    }
+  </style>
 </head>
 
 <body class="hold-transition login-page  ">
   <div class="login-box">
     <div class="login-logo">
       <a href="#">
-        <img src="../assets/image/SuperDesechablesLogo.PNG" alt="logo" width="80">
+        <img src="../assets/image/<?= Empresa::getLogoLogin() ?>" alt="logo" width="80">
         <b><?= Empresa::getTitulo1() ?></b><?= Empresa::getTitulo2() ?></a>
     </div>
     <!-- /.login-logo -->
@@ -51,9 +70,15 @@
           <input type="email" class="form-control" placeholder="Email" name="email" autofocus required>
           <span class="glyphicon glyphicon-envelope form-control-feedback"></span>
         </div>
-        <div class="form-group has-feedback">
-          <input type="password" class="form-control" placeholder="Password" name="password" required>
-          <span class="glyphicon glyphicon-lock form-control-feedback"></span>
+        <div class="form-group has-feedback" style="position: relative;">
+          <input type="password" class="form-control" placeholder="Password" name="password" id="passwordField" required style="padding-right: 45px;">
+          <span class="glyphicon glyphicon-lock form-control-feedback" style="right: 35px;"></span>
+          <span class="password-toggle" onclick="togglePassword()"
+            style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #666; z-index: 10; padding: 5px;"
+            onmouseover="this.style.color='#333'"
+            onmouseout="this.style.color='#666'">
+            <i class="fa fa-eye" id="eyeIcon"></i>
+          </span>
         </div>
         <div class="row">
           <!-- /.col -->
@@ -65,6 +90,54 @@
           <!-- /.col -->
         </div>
       </form>
+      <!-- Enlace para recuperar contraseña -->
+      <div class="text-center" style="margin-top: 15px;">
+        <a href="#" onclick="mostrarRecuperarPassword()" style="color: #3498db; text-decoration: none; font-size: 14px;"
+          onmouseover="this.style.textDecoration='underline'"
+          onmouseout="this.style.textDecoration='none'">
+          <i class="fa fa-key" style="margin-right: 5px;"></i>
+          ¿Olvidaste tu contraseña?
+        </a>
+      </div>
+
+      <script>
+        function mostrarRecuperarPassword() {
+          swal({
+            title: 'Recuperar Contraseña',
+            text: 'Contacta al administrador del sistema para recuperar tu contraseña.',
+            icon: 'info',
+            button: 'Entendido'
+          });
+        }
+
+        function togglePassword() {
+          const passwordField = document.getElementById('passwordField');
+          const eyeIcon = document.getElementById('eyeIcon');
+
+          if (passwordField.type === 'password') {
+            passwordField.type = 'text';
+            eyeIcon.className = 'fa fa-eye-slash';
+            eyeIcon.style.color = '#3498db';
+          } else {
+            passwordField.type = 'password';
+            eyeIcon.className = 'fa fa-eye';
+            eyeIcon.style.color = '#666';
+          }
+        }
+      </script>
+      <!-- Footer del sistema -->
+      <div class="text-center" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border-top: 3px solid #3498db;">
+        <div style="margin-bottom: 8px;">
+          <small style="color: #666; font-weight: 600;">
+            &copy; <?= date('Y') ?> <b style="color: #3498db;"><?= Empresa::getNombre() ?></b>
+          </small>
+        </div>
+        <div>
+          <small style="color: #888; font-size: 12px;">
+            Sistema de Gestión Comercial v<?= Empresa::getVersion() ?> | Todos los derechos reservados
+          </small>
+        </div>
+      </div>
       <!-- <br/>
                 <a href="registro.php" class="text-center">Registrarse</a> -->
     </div>

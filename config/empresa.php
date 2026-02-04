@@ -38,6 +38,11 @@ class Empresa
     $config = self::getConfig();
     return $config['nombre'] ?? '';
   }
+  public static function getRuc(): string
+  {
+    $config = self::getConfig();
+    return $config['ruc'] ?? '';
+  }
   public static function getTelefono(): string
   {
     $config = self::getConfig();
@@ -82,5 +87,15 @@ class Empresa
   {
     $config = self::getConfig();
     return $config['version'] ?? '';
+  }
+  public static function getLogoEmpresa(): string
+  {
+    $config = self::getConfig();
+    return $config['logoempresa'] ?? '';
+  }
+  public static function getLogoLogin(): string
+  {
+    $config = self::getConfig();
+    return $config['logologin'] ?? '';
   }
 }
