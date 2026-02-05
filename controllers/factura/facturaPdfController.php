@@ -38,30 +38,28 @@ $facturaTotal = $primerDetalle['factura_total'];
 // Inicia el PDF
 $pdf = new FPDF('P', 'mm', 'A4');
 $pdf->AddPage();
-$pdf->SetFont('Arial', 'B', 14);
 
-// Logo y Nombre de Empresa
-$pdf->Image('../../assets/image/' . Empresa::getLogoEmpresa(), 10, 10, 45); // Logo más grande
+// Logo y Nombre de Empresa - POSICIÓN CORREGIDA
+$pdf->Image('../../assets/image/' . Empresa::getLogoEmpresa(), 10, 10, 45); // Logo tamaño correcto
 $pdf->SetFont('Arial', 'B', 13);
-$pdf->SetXY(60, 10);
-$pdf->Cell(140, 7, utf8_decode(Empresa::getNombre()), 0, 1, 'R');
+$pdf->SetXY(75, 10);
+$pdf->SetXY(75, 10);
+$pdf->Cell(125, 7, utf8_decode(Empresa::getNombre()), 0, 1, 'R');
 $pdf->SetFont('Arial', '', 10);
-$pdf->SetXY(60, 17);
-$pdf->Cell(140, 5, 'R.U.C.:' . Empresa::getRuc(), 0, 1, 'R'); // Ejemplo RUC
+$pdf->SetXY(75, 17);
+$pdf->Cell(125, 5, 'R.U.C.:' . Empresa::getRuc(), 0, 1, 'R');
 
-$pdf->SetXY(60, 22);
-$pdf->Cell(140, 5, 'FACTURA', 0, 1, 'R');
+$pdf->SetXY(75, 22);
+$pdf->Cell(125, 5, 'FACTURA', 0, 1, 'R');
 
-// Datos de empresa en negro y alineados a la derecha debajo del bloque derecho
-$pdf->SetFont('Arial', '', 10);
-$pdf->SetXY(60, 27);
-$pdf->Cell(140, 5, 'No.' . str_pad($facturaComprobante, 9, '0', STR_PAD_LEFT), 0, 1, 'R');
-$pdf->SetXY(60, 34);
-$pdf->Cell(140, 5, utf8_decode(Empresa::getDireccion()), 0, 1, 'R');
-$pdf->SetXY(60, 39);
-$pdf->Cell(140, 5, 'Tel: ' . Empresa::getTelefono(), 0, 1, 'R');
-$pdf->SetXY(60, 44);
-$pdf->Cell(140, 5, utf8_decode(Empresa::getEmailClientes()), 0, 1, 'R');
+$pdf->SetXY(75, 27);
+$pdf->Cell(125, 5, 'No.' . str_pad($facturaComprobante, 9, '0', STR_PAD_LEFT), 0, 1, 'R');
+$pdf->SetXY(75, 34);
+$pdf->Cell(125, 5, utf8_decode(Empresa::getDireccion()), 0, 1, 'R');
+$pdf->SetXY(75, 39);
+$pdf->Cell(125, 5, 'Tel: ' . Empresa::getTelefono(), 0, 1, 'R');
+$pdf->SetXY(75, 44);
+$pdf->Cell(125, 5, utf8_decode(Empresa::getEmailClientes()), 0, 1, 'R');
 
 // --- BLOQUE DE DATOS DEL CLIENTE ESTILO FACTURA ELECTRÓNICA ---
 $pdf->Ln(8);
@@ -96,25 +94,31 @@ $pdf->SetFont('Arial', 'B', 10);
 $pdf->Cell(65, 7, utf8_decode('Dirección:'), 1, 0, 'L');
 $pdf->SetFont('Arial', '', 10);
 $pdf->Cell(190 - 65, 7, utf8_decode($clienteDireccion), 1, 1, 'L');
-// Tabla de productos
+
+// --- TABLA DE PRODUCTOS MEJORADA ---
+
 $pdf->Ln(5);
 $pdf->SetFont('Arial', 'B', 10);
-$pdf->Cell(20, 7, "Cod.", 1, 0, 'C');
-$pdf->Cell(60, 7, utf8_decode("Descripción"), 1, 0, 'C');
-$pdf->Cell(20, 7, "Cantidad", 1, 0, 'C');
-$pdf->Cell(25, 7, "Precio Unit.", 1, 0, 'C');
-$pdf->Cell(25, 7, "Descuento %", 1, 0, 'C');
-$pdf->Cell(40, 7, "Total", 1, 1, 'C');
+$pdf->Cell(28, 8, 'Cod. Principal', 1, 0, 'C');
+$pdf->Cell(15, 8, 'Cant', 1, 0, 'C');
+$pdf->Cell(75, 8, utf8_decode('Descripción'), 1, 0, 'C');
+$pdf->Cell(25, 8, 'Precio Unitario', 1, 0, 'C');
+$pdf->Cell(22, 8, 'Descuento', 1, 0, 'C');
+$pdf->Cell(25, 8, 'Precio Total', 1, 1, 'C');
 $pdf->SetFont('Arial', '', 10);
 
 foreach ($detallesFactura as $detalle) {
-  $pdf->Cell(20, 6, $detalle['producto_codigo'], 1, 0, 'C');
-  $pdf->Cell(60, 6, utf8_decode($detalle['producto_nombre']), 1, 0, 'L');
-  $pdf->Cell(20, 6, $detalle['detalle_cantidad'], 1, 0, 'C');
-  $pdf->Cell(25, 6, "$ " . number_format($detalle['detalle_precio_unit'], 2), 1, 0, 'R');
-  $pdf->Cell(25, 6, number_format($detalle['detalle_descuento'], 2) . "%", 1, 0, 'R');
-  $pdf->Cell(40, 6, "$ " . number_format($detalle['detalle_total'], 2), 1, 1, 'R');
+  $pdf->Cell(28, 7, $detalle['producto_codigo'], 1, 0, 'C');
+  $pdf->Cell(15, 7, $detalle['detalle_cantidad'], 1, 0, 'C');
+  $x = $pdf->GetX();
+  $y = $pdf->GetY();
+  $pdf->MultiCell(75, 7, utf8_decode($detalle['producto_nombre']), 1, 'L');
+  $pdf->SetXY($x + 75, $y);
+  $pdf->Cell(25, 7, '$ ' . number_format($detalle['detalle_precio_unit'], 2), 1, 0, 'R');
+  $pdf->Cell(22, 7, '$ ' . number_format($detalle['detalle_descuento'], 2), 1, 0, 'R');
+  $pdf->Cell(25, 7, '$ ' . number_format($detalle['detalle_total'], 2), 1, 1, 'R');
 }
+
 
 
 // --- INFORMACIÓN ADICIONAL Y FORMA DE PAGO ---

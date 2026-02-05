@@ -124,6 +124,7 @@ foreach ($detallesFactura as $detalle) {
 }
 
 
+
 // --- INFORMACIÓN ADICIONAL Y FORMA DE PAGO ---
 $pdf->Ln(3);
 
