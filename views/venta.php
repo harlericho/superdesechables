@@ -122,13 +122,11 @@
                 <input type="hidden" name="idUsuario" value="<?php echo $id; ?>">
                 <div class="form-group col-md-6">
                   <label for="codigo">Cliente</label>
-                  <div class="input-group">
-                    <div id="selectorCliente" style="flex: 1;"></div>
-                    <span class="input-group-btn">
-                      <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#modalNuevoCliente" title="Agregar nuevo cliente">
-                        <i class="fa fa-plus"></i>
-                      </button>
-                    </span>
+                  <div id="selectorCliente"></div>
+                  <div style="margin-top: 5px;">
+                    <button type="button" class="btn btn-primary btn-sm btn-block" data-toggle="modal" data-target="#modalNuevoCliente" title="Agregar nuevo cliente">
+                      <i class="fa fa-user-plus"></i> Agregar Cliente
+                    </button>
                   </div>
                 </div>
                 <div class="form-group col-md-6">
@@ -153,9 +151,16 @@
                 <div class="form-group col-md-6">
                   <label for="stock">Impuesto (IVA) %</label>
                   <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-plus"></i></span>
-                    <input type="number" min="0" max="20" class="form-control" name="impuesto_factura" placeholder="0" value="0" onkeyup="app.calcularTotal()" required>
+                    <span class="input-group-addon"><i class="fa fa-percent"></i></span>
+                    <input type="number" class="form-control" name="impuesto_factura" id="impuesto_factura" placeholder="Cargando..." readonly>
+                    <span class="input-group-btn">
+                      <button type="button" class="btn btn-default btn-sm" onclick="app.cargarImpuestoActivo()" title="Refrescar impuesto">
+                        <i class="fa fa-refresh"></i>
+                      </button>
+                    </span>
+                    <input type="hidden" name="impuesto_id" id="impuesto_id">
                   </div>
+                  <small class="text-muted">El impuesto se carga automáticamente desde configuración</small>
                 </div>
                 <div class="form-group col-md-6">
                   <label for="stock">Sub Total factura</label>
@@ -276,10 +281,10 @@
               </div>
             </div>
             <div class="form-group">
-              <label for="modal_email">Email</label>
+              <label for="modal_email">Email <span class="text-red">*</span></label>
               <div class="input-group">
                 <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
-                <input type="email" class="form-control" id="modal_email" name="email" placeholder="correo@ejemplo.com" maxlength="100">
+                <input type="email" class="form-control" id="modal_email" name="email" placeholder="correo@ejemplo.com" maxlength="100" required>
               </div>
             </div>
             <input type="hidden" name="rol" value="3">

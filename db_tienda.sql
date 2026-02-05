@@ -271,3 +271,21 @@ CREATE TABLE IF NOT EXISTS `tbl_movimiento_caja` (
 ) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 DELETE FROM `tbl_movimiento_caja`;
+
+-- Dumping structure for table db_tienda.tbl_impuesto
+DROP TABLE IF EXISTS `tbl_impuesto`;
+CREATE TABLE IF NOT EXISTS `tbl_impuesto` (
+  `impuesto_id` int(11) NOT NULL AUTO_INCREMENT,
+  `impuesto_nombre` varchar(50) COLLATE utf8_spanish_ci NOT NULL,
+  `impuesto_porcentaje` decimal(5,2) NOT NULL DEFAULT '0.00',
+  `impuesto_activo` tinyint(1) NOT NULL DEFAULT '0',
+  `impuesto_created_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `impuesto_estado` tinyint(1) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`impuesto_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
+
+-- Dumping data for table db_tienda.tbl_impuesto
+DELETE FROM `tbl_impuesto`;
+INSERT INTO `tbl_impuesto` (`impuesto_id`, `impuesto_nombre`, `impuesto_porcentaje`, `impuesto_activo`, `impuesto_created_date`, `impuesto_estado`) VALUES
+(1, 'Sin IVA', 0.00, 0, NOW(), 1),
+(2, 'IVA General', 15.00, 1, NOW(), 1);

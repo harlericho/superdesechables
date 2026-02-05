@@ -115,6 +115,7 @@ const app = new (function () {
             "<tr><td colspan='7'>No hay detalles de productos</td></tr>";
           this.subTotalFactura.value = "0.00";
           this.totalFactura.value = "0.00";
+          this.calcularTotal(); // Calcular total (debería ser 0.00)
         }
       })
       .catch((err) => console.log(err));
@@ -161,11 +162,12 @@ const app = new (function () {
               "' " +
               selected +
               ">" +
-              element.cliente_dni +
-              " - " +
               element.cliente_nombres +
-              " - " +
+              " " +
               element.cliente_apellidos +
+              " (" +
+              element.cliente_dni +
+              ")" +
               "</option>";
           }
         });
@@ -267,21 +269,27 @@ const app = new (function () {
       .then((res) => res.json())
       .then((data) => {
         this.subTotalFactura.value = parseFloat(data.total).toFixed(2);
-        this.totalFactura.value = parseFloat(data.total).toFixed(2);
+        // No establecer directamente el total, dejar que calcularTotal() lo haga
+        // this.totalFactura.value = parseFloat(data.total).toFixed(2);
+        this.calcularTotal(); // Calcular total con impuestos aplicados
       })
       .catch((err) => console.log(err));
   };
   this.calcularTotal = () => {
-    if (this.impuestoFactura.value.length > 0) {
-      var total =
+    let total = 0;
+    if (
+      this.impuestoFactura.value.length > 0 &&
+      parseFloat(this.impuestoFactura.value) > 0
+    ) {
+      total =
         parseFloat(this.subTotalFactura.value) +
         (parseFloat(this.subTotalFactura.value) *
           parseFloat(this.impuestoFactura.value)) /
           100;
     } else {
-      total = parseFloat(this.totalFactura.value);
+      // Si no hay impuesto, usar el subtotal directamente
+      total = parseFloat(this.subTotalFactura.value) || 0;
     }
-    //this.totalFactura.value = total;
     // Forzar el formateo a dos decimales SIEMPRE
     this.totalFactura.value = Number.isNaN(total) ? "0.00" : total.toFixed(2);
   };
@@ -346,6 +354,7 @@ const app = new (function () {
               this.limpiar_factura();
               this.listadoDetalles();
               this.mostrarSerieFactura();
+              this.cargarImpuestoActivo(); // Recargar impuesto después de la venta
             } else if (data === 2 || data.status === 2) {
               swal("Numero de factura ya existe!!", {
                 icon: "error",
@@ -427,6 +436,34 @@ const app = new (function () {
       .catch((err) => console.log(err));
   };
 
+  this.cargarImpuestoActivo = () => {
+    fetch(
+      "../controllers/impuesto/impuestoController.php?action=obtenerImpuestoActivo",
+      {
+        method: "GET",
+      },
+    )
+      .then((res) => {
+        return res.json();
+      })
+      .then((data) => {
+        if (data && data.impuesto_porcentaje !== undefined) {
+          this.impuestoFactura.value = data.impuesto_porcentaje;
+          document.getElementById("impuesto_id").value = data.impuesto_id;
+          this.impuestoFactura.placeholder =
+            data.impuesto_nombre + " (" + data.impuesto_porcentaje + "%)";
+          this.calcularTotal(); // Recalcular total con el nuevo impuesto
+        } else {
+          this.impuestoFactura.value = 0;
+          this.impuestoFactura.placeholder = "Sin impuesto configurado";
+        }
+      })
+      .catch((err) => {
+        this.impuestoFactura.value = 0;
+        this.impuestoFactura.placeholder = "Error al cargar impuesto";
+      });
+  };
+
   this.imprimirTicketDirecto = (facturaId) => {
     // Obtener datos de la factura
     fetch(
@@ -462,5 +499,11 @@ const app = new (function () {
 app.listadoClientes();
 app.listadoComprobante();
 app.mostrarSerieFactura();
+app.cargarImpuestoActivo();
 app.listadoDetalles();
+// Recalcular total cuando se modifica manualmente el porcentaje de impuesto
+app.impuestoFactura.addEventListener("input", function () {
+  app.calcularTotal();
+});
+
 //app.recargar();
