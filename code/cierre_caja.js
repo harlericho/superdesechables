@@ -20,6 +20,18 @@ class CierreCaja {
   }
 
   /**
+   * Asegurar que el modal se muestre por un tiempo mínimo
+   */
+  async esperarTiempoMinimo(tiempoInicio, tiempoMinimo = 800) {
+    const tiempoTranscurrido = Date.now() - tiempoInicio;
+    const tiempoRestante = tiempoMinimo - tiempoTranscurrido;
+
+    if (tiempoRestante > 0) {
+      await new Promise((resolve) => setTimeout(resolve, tiempoRestante));
+    }
+  }
+
+  /**
    * Obtener datos del día seleccionado
    */
   async obtenerDatos() {
@@ -35,7 +47,8 @@ class CierreCaja {
       return;
     }
 
-    // Mostrar loading
+    // Mostrar loading y guardar timestamp
+    const tiempoInicio = Date.now();
     swal({
       title: "Obteniendo datos...",
       text: "Calculando movimientos del día",
@@ -71,7 +84,8 @@ class CierreCaja {
         if (jsonMatch) {
           const data = JSON.parse(jsonMatch[0]);
           if (data.success) {
-            // Cerrar el modal de loading
+            // Esperar tiempo mínimo antes de cerrar el modal
+            await this.esperarTiempoMinimo(tiempoInicio);
             swal.close();
             this.datosActuales = data;
             this.fechaActual = fecha;
@@ -102,7 +116,8 @@ class CierreCaja {
             btnRealizarCierre.classList.remove("btn-success");
             btnRealizarCierre.classList.add("btn-default");
 
-            // Cerrar loading y mostrar mensaje informativo después
+            // Esperar tiempo mínimo, cerrar loading y mostrar mensaje informativo después
+            await this.esperarTiempoMinimo(tiempoInicio);
             swal({
               title: "Información",
               text:
@@ -118,7 +133,8 @@ class CierreCaja {
             btnRealizarCierre.classList.remove("btn-default");
             btnRealizarCierre.classList.add("btn-success");
 
-            // Solo cerrar loading si no hay cierre previo
+            // Esperar tiempo mínimo antes de cerrar si no hay cierre previo
+            await this.esperarTiempoMinimo(tiempoInicio);
             swal.close();
           }
         } else {
@@ -127,7 +143,8 @@ class CierreCaja {
       }
     } catch (error) {
       console.error("Error:", error);
-      // Cerrar el modal de loading antes de mostrar el error
+      // Esperar tiempo mínimo antes de cerrar el modal de loading y mostrar el error
+      await this.esperarTiempoMinimo(tiempoInicio);
       swal.close();
       swal({
         title: "Error",

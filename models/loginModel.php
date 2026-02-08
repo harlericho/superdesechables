@@ -1,5 +1,5 @@
 <?php
-include_once '../config/db.php';
+include_once __DIR__ . '/../config/db.php';
 class LoginModel
 {
   public static function existeUsuarioEmailLogin($email)
