@@ -289,3 +289,29 @@ DELETE FROM `tbl_impuesto`;
 INSERT INTO `tbl_impuesto` (`impuesto_id`, `impuesto_nombre`, `impuesto_porcentaje`, `impuesto_activo`, `impuesto_created_date`, `impuesto_estado`) VALUES
 (1, 'Sin IVA', 0.00, 0, NOW(), 1),
 (2, 'IVA General', 15.00, 1, NOW(), 1);
+
+-- Dumping structure for table db_tienda.tbl_cierre_caja
+DROP TABLE IF EXISTS `tbl_cierre_caja`;
+CREATE TABLE IF NOT EXISTS `tbl_cierre_caja` (
+  `cierre_id` int(11) NOT NULL AUTO_INCREMENT,
+  `cierre_fecha` date NOT NULL,
+  `cierre_hora` time NOT NULL,
+  `cierre_saldo_inicial` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `cierre_ingresos_efectivo` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `cierre_ingresos_transferencia` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `cierre_ingresos_cheque` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `cierre_ingresos_otros` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `cierre_total_ingresos` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `cierre_total_egresos` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `cierre_ventas_sin_iva` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `cierre_ventas_con_iva` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `cierre_iva_cobrado` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `cierre_saldo_final` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `cierre_observaciones` text COLLATE utf8_spanish_ci,
+  `cierre_usuario_id` int(11) NOT NULL,
+  `cierre_created_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `cierre_estado` tinyint(1) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`cierre_id`),
+  KEY `IX_cierre_usuario` (`cierre_usuario_id`),
+  CONSTRAINT `FK_cierre_usuario` FOREIGN KEY (`cierre_usuario_id`) REFERENCES `tbl_usuario` (`usuario_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
