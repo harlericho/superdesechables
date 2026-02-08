@@ -6,6 +6,7 @@ include_once '../../models/proveedorModel.php';
 include_once '../../models/rolModel.php';
 include_once '../../models/usuarioModel.php';
 include_once '../../models/categoriaModel.php';
+include_once '../../models/gananciasModel.php';
 session_start();
 foreach (UsuarioModel::obtenerDatoUsuario($_SESSION['email']) as $key => $value) {
   $rolDescripcion = $value['rol_descripcion'];
@@ -25,6 +26,8 @@ $numProveedores = ProveedorModel::contarProveedores();
 $numRoles = RolModel::contarRoles();
 $numUsuarios = UsuarioModel::contarUsuarios();
 $numCategorias = CategoriaModel::contarCategorias();
+$totalGanancias = GananciasModel::obtenerTotalGanancias();
+
 
 
 $arrayName = array(
@@ -38,6 +41,6 @@ $arrayName = array(
   'numRoles' => $numRoles['numRoles'],
   'numUsuarios' => $numUsuarios['numUsuarios'],
   'numCategorias' => $numCategorias['numCategorias'],
-
+  'totalGanancias' => $totalGanancias['totalGanancias'],
 );
 echo json_encode($arrayName);

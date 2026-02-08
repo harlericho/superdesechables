@@ -11,6 +11,7 @@ const app = new (function () {
   this.numDinero = document.getElementById("numDinero");
   this.numUsuarios = document.getElementById("numUsuarios");
   this.numCategorias = document.getElementById("numCategorias");
+  this.numGanacias = document.getElementById("numGanacias");
 
   this.contarDescripcion = () => {
     fetch("../controllers/main/mainListadoController.php", {
@@ -63,6 +64,12 @@ const app = new (function () {
             this.numCategorias.innerHTML = data["numCategorias"];
           } else {
             this.numCategorias.innerHTML = "0";
+          }
+          if (data["totalGanancias"] > 0) {
+            this.numGanacias.innerHTML =
+              "$ " + parseFloat(data["totalGanancias"]).toFixed(2);
+          } else {
+            this.numGanacias.innerHTML = "$ 0.00";
           }
           if (data["stockProductos"] > 0) {
             swal(

@@ -226,6 +226,7 @@ foreach (LoginModel::existeUsuarioEmailLogin($_SESSION['email']) as $key => $val
             <li><a href="../controllers/cliente/clienteReporteController.php" target="_blank"><i class="fa fa-circle-o"></i> Clientes</a></li>
             <li><a href="../controllers/proveedor/proveedorReporteController.php" target="_blank"><i class="fa fa-circle-o"></i> Proveedores</a></li>
             <li><a href="../controllers/usuario/usuarioReporteController.php" target="_blank"><i class="fa fa-circle-o"></i> Usuarios</a></li>
+            <li><a href="ganancias.php"><i class="fa fa-circle-o"></i> Ganancias</a></li>
           </ul>
         </li>
       <?php
