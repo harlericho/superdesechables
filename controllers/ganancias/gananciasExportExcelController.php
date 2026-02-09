@@ -109,9 +109,11 @@ if (file_exists($logoPath)) {
   $drawing->setDescription('Logo de la Empresa');
   $drawing->setPath($logoPath);
   $drawing->setCoordinates('A1');
-  $drawing->setHeight(60);
+  $drawing->setHeight(165);
+  $drawing->setOffsetX(18);
+  $drawing->setOffsetY(10);
   $drawing->setWorksheet($sheet);
-  $row = 4; // Dejar espacio para el logo
+  $row = 6; // Dejar espacio para el logo
 }
 
 // ENCABEZADO
@@ -524,7 +526,7 @@ if (empty($ganancias)) {
 $sheet->getColumnDimension('A')->setWidth(35);
 $sheet->getColumnDimension('B')->setWidth(35);
 $sheet->getColumnDimension('C')->setWidth(20);
-$sheet->getColumnDimension('D')->setWidth(10);
+$sheet->getColumnDimension('D')->setWidth(20);
 $sheet->getColumnDimension('E')->setWidth(12);
 $sheet->getColumnDimension('F')->setWidth(12);
 $sheet->getColumnDimension('G')->setWidth(12);
