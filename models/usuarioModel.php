@@ -19,6 +19,7 @@ class UsuarioModel
           'password' => Encryption::_desencryptacion($row['usuario_password']),
           'rol' => $row['rol_id'],
           'descripcion' => $row['rol_descripcion'],
+          'fecha_creacion' => $row['usuario_created_date'],
           'estado' => $row['usuario_estado']
         );
       }
