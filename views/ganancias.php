@@ -39,6 +39,31 @@
     padding: 1rem;
   }
 
+  /* Asegurar que todos los elementos del tab-periodo no se desborden */
+  #tab-periodo * {
+    box-sizing: border-box;
+  }
+
+  #tab-periodo .row {
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  #tab-periodo .col-md-12 {
+    overflow: hidden;
+  }
+
+  #tab-periodo .col-md-4,
+  #tab-periodo .col-md-8,
+  #tab-periodo .col-md-12 {
+    position: relative;
+  }
+
+  /* Asegurar que el col-md-8 no se desborde */
+  #tab-periodo .col-md-8 {
+    min-width: 0;
+  }
+
   /* Columnas del análisis por período - Distribución mejorada */
   #tab-periodo .col-md-4:first-child {
     padding-right: 10px;
@@ -46,6 +71,9 @@
 
   #tab-periodo .col-md-8:last-child {
     padding-left: 10px;
+    max-width: 66.666667%;
+    flex: 0 0 66.666667%;
+    overflow: hidden;
   }
 
   /* Hacer que el gráfico sea más compacto y la tabla más amplia */
@@ -55,6 +83,15 @@
 
   #tab-periodo .col-md-8 .card {
     height: 450px;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #tab-periodo .card-header {
+    flex-shrink: 0;
   }
 
   #tab-periodo .col-md-4 .card-body {
@@ -64,7 +101,13 @@
 
   #tab-periodo .col-md-8 .card-body {
     padding: 1.2rem;
-    overflow-y: auto;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
   }
 
   /* Tabla de período más grande y legible */
@@ -93,42 +136,49 @@
     vertical-align: middle;
     text-align: center;
     font-weight: 500;
+    white-space: nowrap;
   }
 
-  /* Anchos específicos para cada columna */
+  /* Anchos específicos para cada columna - Más flexibles */
   #tablaPeriodo th:nth-child(1),
   #tablaPeriodo td:nth-child(1) {
-    width: 20%;
+    min-width: 100px;
+    width: 16%;
   }
 
   /* Período */
   #tablaPeriodo th:nth-child(2),
   #tablaPeriodo td:nth-child(2) {
-    width: 12%;
+    min-width: 70px;
+    width: 13%;
   }
 
   /* Ventas */
   #tablaPeriodo th:nth-child(3),
   #tablaPeriodo td:nth-child(3) {
-    width: 10%;
+    min-width: 65px;
+    width: 13%;
   }
 
   /* Cant. */
   #tablaPeriodo th:nth-child(4),
   #tablaPeriodo td:nth-child(4) {
-    width: 18%;
+    min-width: 90px;
+    width: 16%;
   }
 
   /* Ingresos */
   #tablaPeriodo th:nth-child(5),
   #tablaPeriodo td:nth-child(5) {
-    width: 18%;
+    min-width: 90px;
+    width: 16%;
   }
 
   /* Ganancia */
   #tablaPeriodo th:nth-child(6),
   #tablaPeriodo td:nth-child(6) {
-    width: 15%;
+    min-width: 90px;
+    width: 16%;
   }
 
   /* Margen */
@@ -154,11 +204,13 @@
     top: 0;
     z-index: 10;
     box-shadow: 0 4px 6px rgba(0, 123, 255, 0.3);
+    background: linear-gradient(135deg, #AACFF2 0%, #AACFF2 100%) !important;
   }
 
   /* Espaciado del card de la tabla */
   #tab-periodo .col-md-8:last-child .card-body {
     padding: 1.5rem 1.2rem;
+    overflow: hidden;
   }
 
   /* Altura mínima para asegurar buena visualización */
@@ -201,6 +253,118 @@
   .table-responsive {
     border-radius: 0.375rem;
     box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    position: relative;
+    box-sizing: border-box;
+  }
+
+  /* Contenedor específico para la tabla de período */
+  #tab-periodo .table-responsive {
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: auto;
+    display: block;
+    flex: 1;
+    max-height: 350px;
+  }
+
+  /* Eliminar padding extra en el contenedor */
+  #tab-periodo .table-responsive table {
+    margin-bottom: 0;
+  }
+
+  /* Estilo personalizado para el scrollbar en navegadores webkit */
+  .table-responsive::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+  }
+
+  .table-responsive::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+  }
+
+  .table-responsive::-webkit-scrollbar-thumb {
+    background: #AACFF2;
+    border-radius: 10px;
+  }
+
+  .table-responsive::-webkit-scrollbar-thumb:hover {
+    background: #88b8e6;
+  }
+
+  /* Indicador visual de scroll - sombra en el borde derecho cuando hay contenido */
+  .table-responsive::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 15px;
+    height: 100%;
+    background: linear-gradient(to left, rgba(0, 0, 0, 0.05), transparent);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .table-responsive:hover::after {
+    opacity: 1;
+  }
+
+  /* Asegurar que la tabla no se desborde */
+  #tablaPeriodo {
+    min-width: 700px;
+    margin-bottom: 0;
+    width: 100%;
+    table-layout: auto;
+  }
+
+  /* Forzar que el contenedor table-responsive contenga la tabla */
+  #tab-periodo .col-md-8 .table-responsive {
+    width: 100%;
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+    display: block;
+    max-height: 350px;
+  }
+
+  /* Estilo para el mensaje de ayuda */
+  .card-tools small {
+    font-size: 0.85rem;
+    color: #6c757d;
+  }
+
+  /* Media query para tablets */
+  @media (max-width: 1024px) and (min-width: 769px) {
+    #tablaPeriodo {
+      font-size: 1rem;
+      min-width: 700px;
+    }
+
+    #tablaPeriodo th {
+      padding: 1rem 0.7rem;
+      font-size: 0.95rem;
+    }
+
+    #tablaPeriodo td {
+      padding: 0.9rem 0.7rem;
+      font-size: 0.9rem;
+    }
+
+    #tab-periodo .col-md-8 .card-body {
+      padding: 1rem;
+    }
+
+    #tab-periodo .table-responsive {
+      max-width: 100%;
+      max-height: 350px;
+      overflow-x: auto;
+      overflow-y: auto;
+    }
   }
 
   /* Animación suave para el hover */
@@ -213,11 +377,6 @@
     margin: 15px auto;
     max-width: 1200px;
     padding: 0 15px;
-  }
-
-  /* Usar estilos Bootstrap puros */
-  #alertas .alert {
-    /* Bootstrap se encargará de los estilos */
   }
 
   /* Botones modernos y profesionales */
@@ -282,11 +441,6 @@
     color: white;
   }
 
-  /* Mejorar toolbar de botones - sin fondo */
-  .btn-toolbar {
-    /* Sin estilos extra, solo espaciado */
-  }
-
   @media (max-width: 768px) {
     #tablaGanancias {
       font-size: 0.8rem;
@@ -310,21 +464,49 @@
     #tab-periodo .col-md-4 .card,
     #tab-periodo .col-md-8 .card {
       height: auto;
+      min-height: 400px;
     }
 
     /* Mejorar la tabla en móviles */
     #tablaPeriodo {
-      font-size: 0.95rem;
+      font-size: 0.85rem;
+      min-width: 650px;
+    }
+
+    #tab-periodo .table-responsive {
+      max-height: 400px !important;
+      overflow-x: auto !important;
+      overflow-y: auto !important;
     }
 
     #tablaPeriodo th {
-      padding: 1rem 0.6rem;
-      font-size: 0.9rem;
+      padding: 0.8rem 0.5rem;
+      font-size: 0.85rem;
+      white-space: nowrap;
     }
 
     #tablaPeriodo td {
-      padding: 0.9rem 0.6rem;
-      font-size: 0.85rem;
+      padding: 0.7rem 0.5rem;
+      font-size: 0.8rem;
+      white-space: nowrap;
+    }
+
+    /* Asegurar scroll horizontal en móviles */
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto !important;
+      overflow-y: auto !important;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    #tab-periodo .col-md-8 .card-body {
+      padding: 0.8rem !important;
+      overflow: hidden !important;
+    }
+
+    .badge {
+      font-size: 0.75em;
+      padding: 0.4em 0.6em;
     }
 
     /* Distribución en móviles: gráfico arriba, tabla abajo */
@@ -360,6 +542,46 @@
       margin-bottom: 0.5rem;
       display: flex;
       justify-content: space-between;
+    }
+
+    /* Asegurar que el texto de los badges no se corte */
+    .badge {
+      display: inline-block;
+      min-width: fit-content;
+    }
+  }
+
+  /* Media query para dispositivos muy pequeños */
+  @media (max-width: 576px) {
+    #tablaPeriodo {
+      font-size: 0.75rem;
+      min-width: 600px;
+    }
+
+    #tablaPeriodo th {
+      padding: 0.6rem 0.4rem;
+      font-size: 0.75rem;
+    }
+
+    #tablaPeriodo td {
+      padding: 0.6rem 0.4rem;
+      font-size: 0.7rem;
+    }
+
+    #tab-periodo .col-md-8 .card-body {
+      padding: 0.5rem !important;
+    }
+
+    #tab-periodo .table-responsive {
+      max-height: 350px !important;
+    }
+
+    .card-header h3 {
+      font-size: 0.95rem;
+    }
+
+    .card-tools small {
+      display: none !important;
     }
 
     .btn-group .btn {
@@ -622,7 +844,7 @@
                             <div class="col-md-4">
                               <div class="card">
                                 <div class="card-header">
-                                  <h3 class="card-title"><i class="fas fa-chart-bar"></i> Gráfico de Ganancias</h3>
+                                  <h3 class="card-title"><i class="fa fa-bar-chart"></i> Gráfico de Ganancias</h3>
                                 </div>
                                 <div class="card-body">
                                   <div class="chart-container">
@@ -635,6 +857,9 @@
                               <div class="card">
                                 <div class="card-header">
                                   <h3 class="card-title"><i class="fa fa-table"></i> Datos por Período</h3>
+                                  <div class="card-tools">
+                                    <small class="text-muted d-none d-md-inline"><i class="fa fa-info-circle"></i> Desliza horizontalmente para ver todos los datos</small>
+                                  </div>
                                 </div>
                                 <div class="card-body">
                                   <div class="table-responsive">
