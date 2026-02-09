@@ -66,8 +66,7 @@ class GananciasPDF extends FPDF
 
     foreach ($datosGanancias as $item) {
       $totalVentasReal += floatval($item['total_ventas'] ?? 0);
-      // Usar costo_total del modelo si existe, sino calcular
-      $costoItem = floatval($item['costo_total'] ?? (floatval($item['cantidad_vendida'] ?? 0) * floatval($item['producto_precio_compra'] ?? 0)));
+      $costoItem = floatval($item['cantidad_vendida'] ?? 0) * floatval($item['producto_precio_compra'] ?? 0);
       $totalCostosReal += $costoItem;
       $cantidadTotalReal += intval($item['cantidad_vendida'] ?? 0);
       $gananciaNetaReal += floatval($item['ganancia_neta'] ?? 0);
@@ -247,10 +246,9 @@ class GananciasPDF extends FPDF
     $this->SetFont('Arial', 'B', 9);
     $this->SetFillColor(200, 220, 255);
 
-    // Anchos ajustados para 8 columnas (landscape: 297mm)
-    $w = array(25, 75, 20, 25, 25, 30, 35, 25); // Total: 260mm
+    $w = array(35, 65, 25, 22, 28, 32, 38, 35); // Anchos de columnas expandidos
     for ($i = 0; $i < count($header); $i++) {
-      $this->Cell($w[$i], 8, utf8_decode($header[$i]), 1, 0, 'C', true);
+      $this->Cell($w[$i], 8, $header[$i], 1, 0, 'C', true);
     }
     $this->Ln();
 
@@ -260,14 +258,19 @@ class GananciasPDF extends FPDF
     $fill = false;
 
     foreach ($data as $row) {
-      $this->Cell($w[0], 6, utf8_decode($row['producto_codigo']), 'LR', 0, 'L', $fill);
-      $this->Cell($w[1], 6, utf8_decode(substr($row['producto_nombre'], 0, 45)), 'LR', 0, 'L', $fill);
-      $this->Cell($w[2], 6, $row['cantidad_vendida'], 'LR', 0, 'C', $fill);
-      $this->Cell($w[3], 6, number_format($row['producto_precio_compra'], 2), 'LR', 0, 'R', $fill);
-      $this->Cell($w[4], 6, number_format($row['producto_precio_venta'], 2), 'LR', 0, 'R', $fill);
-      $this->Cell($w[5], 6, number_format($row['total_ventas'], 2), 'LR', 0, 'R', $fill);
-      $this->Cell($w[6], 6, number_format($row['ganancia_neta'] ?? 0, 2), 'LR', 0, 'R', $fill);
-      $this->Cell($w[7], 6, number_format($row['margen_porcentaje'] ?? 0, 2) . '%', 'LR', 0, 'R', $fill);
+      $margenProd = 0;
+      if ($row['total_ventas'] > 0) {
+        $margenProd = (($row['ganancia_neta'] / $row['total_ventas']) * 100);
+      }
+
+      $this->Cell($w[0], 7, $row['producto_codigo'], 'LR', 0, 'L', $fill);
+      $this->Cell($w[1], 7, substr($row['producto_nombre'], 0, 32), 'LR', 0, 'L', $fill);
+      $this->Cell($w[2], 7, $row['cantidad_vendida'], 'LR', 0, 'C', $fill);
+      $this->Cell($w[3], 7, number_format($row['producto_precio_compra'], 2), 'LR', 0, 'R', $fill);
+      $this->Cell($w[4], 7, number_format($row['producto_precio_venta'], 2), 'LR', 0, 'R', $fill);
+      $this->Cell($w[5], 7, number_format($row['total_ventas'], 2), 'LR', 0, 'R', $fill);
+      $this->Cell($w[6], 7, number_format($row['ganancia_neta'], 2), 'LR', 0, 'R', $fill);
+      $this->Cell($w[7], 7, number_format($margenProd, 2) . '%', 'LR', 0, 'R', $fill);
       $this->Ln();
       $fill = !$fill;
     }
@@ -397,8 +400,8 @@ class GananciasPDF extends FPDF
       $this->Cell(0, 4, 'MAYOR GANANCIA:', 0, 1, 'L');
       $this->SetTextColor(0, 0, 0);
       $this->SetFont('Arial', '', 8);
-      $this->Cell(0, 3, utf8_decode('Producto: ' . $mejorProducto['producto_codigo'] . ' - ' . $mejorProducto['producto_nombre']), 0, 1);
-      $this->Cell(0, 3, utf8_decode('Ganancia: $' . number_format($mejorProducto['ganancia_neta'], 2) . ' | Vendido: ' . $mejorProducto['cantidad_vendida'] . ' unidades'), 0, 1);
+      $this->Cell(0, 3, 'Producto: ' . $mejorProducto['producto_codigo'] . ' - ' . $mejorProducto['producto_nombre'], 0, 1);
+      $this->Cell(0, 3, 'Ganancia: $' . number_format($mejorProducto['ganancia_neta'], 2) . ' | Vendido: ' . $mejorProducto['cantidad_vendida'] . ' unidades', 0, 1);
       $this->Ln(2);
 
       // Peor producto
@@ -407,8 +410,8 @@ class GananciasPDF extends FPDF
       $this->Cell(0, 4, 'MENOR GANANCIA:', 0, 1, 'L');
       $this->SetTextColor(0, 0, 0);
       $this->SetFont('Arial', '', 8);
-      $this->Cell(0, 3, utf8_decode('Producto: ' . $peorProducto['producto_codigo'] . ' - ' . $peorProducto['producto_nombre']), 0, 1);
-      $this->Cell(0, 3, utf8_decode('Ganancia: $' . number_format($peorProducto['ganancia_neta'], 2) . ' | Vendido: ' . $peorProducto['cantidad_vendida'] . ' unidades'), 0, 1);
+      $this->Cell(0, 3, 'Producto: ' . $peorProducto['producto_codigo'] . ' - ' . $peorProducto['producto_nombre'], 0, 1);
+      $this->Cell(0, 3, 'Ganancia: $' . number_format($peorProducto['ganancia_neta'], 2) . ' | Vendido: ' . $peorProducto['cantidad_vendida'] . ' unidades', 0, 1);
       $this->Ln(3);
     }
 
@@ -449,14 +452,10 @@ if (empty($ganancias) && !$fechaDesde && !$fechaHasta && !$codigoProducto) {
     $ganancias[] = [
       'producto_codigo' => $item['producto_codigo'],
       'producto_nombre' => $item['producto_nombre'],
-      'categoria_descripcion' => 'Sin categoría',
       'producto_precio_compra' => $item['producto_precio_compra'],
       'producto_precio_venta' => $item['producto_precio_venta'],
       'cantidad_vendida' => $item['cantidad_vendida'],
       'total_ventas' => $item['total_ventas'],
-      'total_descuentos' => 0,
-      'costo_total' => $costoTotal,
-      'ganancia_bruta' => $gananciBruta,
       'ganancia_neta' => $gananciaNeta,
       'margen_porcentaje' => round($margen, 2)
     ];
@@ -473,8 +472,7 @@ $gananciaNetaCalculada = 0;
 
 foreach ($ganancias as $item) {
   $totalVentasCalculado += $item['total_ventas'] ?? 0;
-  // Usar costo_total del modelo si existe, sino calcular
-  $costoItem = $item['costo_total'] ?? (($item['cantidad_vendida'] ?? 0) * ($item['producto_precio_compra'] ?? 0));
+  $costoItem = ($item['cantidad_vendida'] ?? 0) * ($item['producto_precio_compra'] ?? 0);
   $totalCostosCalculado += $costoItem;
   $cantidadTotalCalculada += $item['cantidad_vendida'] ?? 0;
   $gananciaNetaCalculada += $item['ganancia_neta'] ?? 0;
@@ -495,7 +493,7 @@ if (empty($resumen) || !isset($resumen['total_ventas_general'])) {
   ];
 }
 
-// Headers de la tabla - 8 columnas esenciales
+// Headers de la tabla
 $header = array('Codigo', 'Producto', 'Cant.', 'P.Comp', 'P.Venta', 'T.Ventas', 'Ganancia', 'Margen%');
 
 // Preparar filtros para el PDF
