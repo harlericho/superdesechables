@@ -1,7 +1,8 @@
 <?php
 require_once '../../assets/fpdf/fpdf.php';
 require_once '../../config/empresa.php';
-
+// Configurar zona horaria de Ecuador
+date_default_timezone_set('America/Guayaquil');
 $pdf = new FPDF();
 $pdf->AddPage();
 
@@ -49,6 +50,11 @@ if (empty($reporte)) {
   $pdf->SetFont('Arial', 'I', 12);
   $pdf->Cell(0, 12, utf8_decode('No hay registros para este año.'), 0, 1, 'C');
 } else {
+  // Ordenar por mes
+  usort($reporte, function ($a, $b) {
+    $meses = ['Enero' => 1, 'Febrero' => 2, 'Marzo' => 3, 'Abril' => 4, 'Mayo' => 5, 'Junio' => 6, 'Julio' => 7, 'Agosto' => 8, 'Septiembre' => 9, 'Octubre' => 10, 'Noviembre' => 11, 'Diciembre' => 12];
+    return ($meses[$a['mes']] ?? 99) - ($meses[$b['mes']] ?? 99);
+  });
   // Encabezados de tabla
   $pdf->SetFont('Arial', 'B', 10);
   $pdf->SetFillColor(220, 240, 255);
@@ -72,6 +78,6 @@ if (empty($reporte)) {
   }
 }
 
-// agregar el nombre del archivo como reporte del mes poner fecha y hora
-$nombreArchivo = 'reporte_mensual_' . date('Y-m-d_H-i-s') . '.pdf';
+// agregar el nombre del archivo como reporte del ano y la fecha de generacion
+$nombreArchivo = 'reporte_mensual_' . date($anio) . '.pdf';
 $pdf->Output('D', $nombreArchivo);

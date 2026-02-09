@@ -74,17 +74,17 @@ function cargarGraficoYTabla(anio) {
     .then((data) => {
       var meses = [
         "Enero",
-        "Feb",
-        "Mar",
-        "Abr",
-        "May",
-        "Jun",
-        "Jul",
-        "Ago",
-        "Sep",
-        "Oct",
-        "Nov",
-        "Dic",
+        "Febrero",
+        "Marzo",
+        "Abril",
+        "Mayo",
+        "Junio",
+        "Julio",
+        "Agosto",
+        "Septiembre",
+        "Octubre",
+        "Noviembre",
+        "Diciembre",
       ];
       var dinero = Array(12).fill(0);
       // Llenar tabla detalle mensual
@@ -95,6 +95,12 @@ function cargarGraficoYTabla(anio) {
         tr.innerHTML = `<td colspan="7" style="text-align:center;color:#888;">No hay registros para este año</td>`;
         tbody.appendChild(tr);
       } else {
+        // Ordenar por mes
+        data.sort(function (a, b) {
+          var mesA = parseInt(a.periodo.split("-")[1], 10);
+          var mesB = parseInt(b.periodo.split("-")[1], 10);
+          return mesA - mesB;
+        });
         data.forEach(function (item) {
           var mes = parseInt(item.periodo.split("-")[1], 10) - 1;
           dinero[mes] = parseFloat(item.total_ingresos);
