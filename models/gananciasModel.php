@@ -305,4 +305,43 @@ class GananciasModel
       return ['totalGanancias' => 0];
     }
   }
+
+  /**
+   * Devuelve el reporte mensual para un año
+   */
+  public static function getReporteMensual($anio)
+  {
+    $fechaDesde = $anio . '-01-01';
+    $fechaHasta = $anio . '-12-31';
+    $datos = self::obtenerGananciasPorPeriodo('mensual', $fechaDesde, $fechaHasta);
+    $meses = [
+      '01' => 'Enero',
+      '02' => 'Feb',
+      '03' => 'Mar',
+      '04' => 'Abr',
+      '05' => 'May',
+      '06' => 'Jun',
+      '07' => 'Jul',
+      '08' => 'Ago',
+      '09' => 'Sep',
+      '10' => 'Oct',
+      '11' => 'Nov',
+      '12' => 'Dic'
+    ];
+    $reporte = [];
+    foreach ($datos as $item) {
+      $periodo = $item['periodo']; // Ejemplo: 2026-02
+      $mesNum = substr($periodo, 5, 2);
+      $reporte[] = [
+        'mes' => $meses[$mesNum] ?? $mesNum,
+        'ventas' => $item['total_ventas'],
+        'cantidad_vendida' => $item['cantidad_vendida'],
+        'ingresos' => $item['total_ingresos'],
+        'descuentos' => $item['total_descuentos'],
+        'costos' => $item['total_costos'],
+        'ganancia_neta' => $item['ganancia_neta'],
+      ];
+    }
+    return $reporte;
+  }
 }
