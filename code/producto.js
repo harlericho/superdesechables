@@ -350,57 +350,83 @@ const app = new (function () {
     this.imagen.innerHTML = "";
   };
   this.exportarCSV = function () {
-    // Busca la tabla de productos
-    let tabla = document.getElementById("example1");
-    if (!tabla) {
-      swal({
-        title: "Error",
-        text: "No hay datos para exportar.",
-        icon: "error",
-        button: "Aceptar",
-      });
-      return;
-    }
-    let csv = [];
-    for (let i = 0; i < tabla.rows.length; i++) {
-      let row = [],
-        cols = tabla.rows[i].cells;
-      let numCols = cols.length > 1 ? cols.length - 1 : cols.length;
-      for (let j = 0; j < numCols; j++) {
-        let text = cols[j].innerText.replace(/\n/g, " ").replace(/,/g, "");
-        // Si es la columna de código (índice 2), conserva ceros a la izquierda
-        if (i === 0) {
-          // encabezado
-          row.push('"' + text + '"');
-        } else if (j === 2) {
-          // Obtiene el valor original del código desde la celda HTML
-          let codigo = cols[j].querySelector("strong")
-            ? cols[j].querySelector("strong").textContent
-            : text;
-          row.push('"' + codigo + '"');
-        } else {
-          row.push('"' + text + '"');
+    // Obtener todos los productos desde el servidor
+    fetch("../controllers/producto/productoListadoController.php", {
+      method: "GET",
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (!data || data.length === 0) {
+          swal({
+            title: "Error",
+            text: "No hay datos para exportar.",
+            icon: "error",
+            button: "Aceptar",
+          });
+          return;
         }
-      }
-      csv.push(row.join(","));
-    }
-    let csvString = csv.join("\n");
-    let blob = new Blob([csvString], { type: "text/csv" });
-    let link = document.createElement("a");
-    link.href = window.URL.createObjectURL(blob);
-    // Fecha y hora actual en formato YYYYMMDD_HHMMSS
-    let fecha = new Date();
-    let yyyy = fecha.getFullYear();
-    let mm = String(fecha.getMonth() + 1).padStart(2, "0");
-    let dd = String(fecha.getDate()).padStart(2, "0");
-    let hh = String(fecha.getHours()).padStart(2, "0");
-    let min = String(fecha.getMinutes()).padStart(2, "0");
-    let ss = String(fecha.getSeconds()).padStart(2, "0");
-    let fechaActual = yyyy + mm + dd + "_" + hh + min + ss;
-    link.download = "productos_" + fechaActual + ".csv";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+
+        let csv = [];
+        // Encabezados
+        let encabezados = [
+          "Proveedor",
+          "Categoria",
+          "Codigo",
+          "Nombre",
+          "Descripcion",
+          "Precio Venta",
+          "Stock",
+          "Estado",
+        ];
+        csv.push(encabezados.map((h) => '"' + h + '"').join(","));
+
+        // Datos de productos
+        data.forEach((element) => {
+          let row = [];
+          row.push('"' + element.proveedor_nombres + '"');
+          row.push('"' + element.categoria_descripcion + '"');
+          // Forzar el código como texto en Excel para preservar ceros a la izquierda
+          row.push('="' + element.producto_codigo + '"');
+          row.push('"' + element.producto_nombre + '"');
+          row.push('"' + element.producto_descripcion + '"');
+          row.push('"' + element.producto_precio_venta + '"');
+          row.push('"' + element.producto_stock + '"');
+          row.push(
+            '"' +
+              (element.producto_estado == "1" ? "Activo" : "Inactivo") +
+              '"',
+          );
+          csv.push(row.join(","));
+        });
+
+        let csvString = csv.join("\n");
+        let blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
+        let link = document.createElement("a");
+        link.href = window.URL.createObjectURL(blob);
+
+        // Fecha y hora actual en formato YYYYMMDD_HHMMSS
+        let fecha = new Date();
+        let yyyy = fecha.getFullYear();
+        let mm = String(fecha.getMonth() + 1).padStart(2, "0");
+        let dd = String(fecha.getDate()).padStart(2, "0");
+        let hh = String(fecha.getHours()).padStart(2, "0");
+        let min = String(fecha.getMinutes()).padStart(2, "0");
+        let ss = String(fecha.getSeconds()).padStart(2, "0");
+        let fechaActual = yyyy + mm + dd + "_" + hh + min + ss;
+
+        link.download = "productos_" + fechaActual + ".csv";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      })
+      .catch((error) => {
+        swal({
+          title: "Error",
+          text: "Error al obtener los productos para exportar.",
+          icon: "error",
+          button: "Aceptar",
+        });
+      });
   };
 })();
 app.listado();
