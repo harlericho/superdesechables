@@ -169,7 +169,14 @@ $pdf->MultiCell(0, 6, utf8_decode("El cliente se compromete a pagar la factura e
 
 $nombreArchivo = preg_replace('/[^A-Za-z0-9\-]/', '', $facturaComprobante) . '.pdf';
 $pdfString = $pdf->Output('S', $nombreArchivo);
-$enviado = enviarFacturaPorCorreo($correo, $pdfString, $nombreArchivo);
+
+$datosFactura = [
+  'numero' => str_pad($facturaComprobante, 9, '0', STR_PAD_LEFT),
+  'fecha' => $facturaFecha,
+  'monto' => number_format($facturaTotal, 2),
+  'cliente' => $clienteNombres
+];
+$enviado = enviarFacturaPorCorreo($correo, $pdfString, $nombreArchivo, $datosFactura);
 
 if ($enviado) {
   echo json_encode(['success' => true]);

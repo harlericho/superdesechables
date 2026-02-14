@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <?php require_once '../config/empresa.php'; ?>
-  <title><?= Empresa::getNombre() ?></title>
+  <title><?= Empresa::getNombre() ?> - Recuperar Contraseña</title>
   <!-- Tell the browser to be responsive to screen width -->
   <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
   <!-- Bootstrap 3.3.7 -->
@@ -18,9 +18,6 @@
   <link rel="stylesheet" href="../assets/dist/css/AdminLTE.min.css">
   <!-- iCheck -->
   <link rel="stylesheet" href="../assets/plugins/iCheck/square/blue.css">
-
-  <!-- Select2 -->
-  <link rel="stylesheet" href="../assets/bower_components/select2/dist/css/select2.min.css">
 
   <!-- Favicon -->
   <link rel="shortcut icon" href="../assets/image/SuperDesechablesLogo.PNG" type="image/x-icon">
@@ -42,10 +39,25 @@
         margin: 5% auto !important;
       }
     }
+
+    .back-to-login {
+      margin-top: 15px;
+      text-align: center;
+    }
+
+    .back-to-login a {
+      color: #3498db;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    .back-to-login a:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 
-<body class="hold-transition login-page  ">
+<body class="hold-transition login-page">
   <div class="login-box">
     <div class="login-logo">
       <a href="#">
@@ -54,68 +66,37 @@
     </div>
     <!-- /.login-logo -->
     <div class="login-box-body">
-      <p class="login-box-msg">Iniciar Sessión</p>
+      <p class="login-box-msg">Recuperar Contraseña</p>
 
-      <!-- Mensaje de sesión expirada -->
-      <?php if (isset($_GET['session']) && $_GET['session'] == 'expired'): ?>
-        <div class="alert alert-warning alert-dismissible">
-          <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-          <h4><i class="icon fa fa-clock-o"></i> Sesión expirada</h4>
-          Su sesión ha expirado por inactividad. Por favor, inicie sesión nuevamente.
-        </div>
-      <?php endif; ?>
+      <div class="alert alert-info">
+        <i class="fa fa-info-circle"></i>
+        Ingresa tu correo electrónico registrado. Se enviará una solicitud al administrador del sistema.
+      </div>
 
-      <form action="javascript:void(0);" method="post" onsubmit="app.login()">
+      <form action="javascript:void(0);" method="post" onsubmit="app.recuperarPassword()">
         <div class="form-group has-feedback">
-          <input type="email" class="form-control" placeholder="Email" name="email" autofocus required>
+          <input type="email" class="form-control" placeholder="Ingresa tu correo electrónico" name="email" id="emailRecuperar" autofocus required>
           <span class="glyphicon glyphicon-envelope form-control-feedback"></span>
         </div>
-        <div class="form-group has-feedback" style="position: relative;">
-          <input type="password" class="form-control" placeholder="Password" name="password" id="passwordField" required style="padding-right: 45px;">
-          <span class="glyphicon glyphicon-lock form-control-feedback" style="right: 35px;"></span>
-          <span class="password-toggle" onclick="togglePassword()"
-            style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #666; z-index: 10; padding: 5px;"
-            onmouseover="this.style.color='#333'"
-            onmouseout="this.style.color='#666'">
-            <i class="fa fa-eye" id="eyeIcon"></i>
-          </span>
-        </div>
+
         <div class="row">
-          <!-- /.col -->
-          <div class="col-xs-6">
+          <div class="col-xs-12">
             <button type="submit" class="btn btn-primary btn-block btn-flat">
-              <i class="fa fa-arrow-circle-right"></i>
-              Ingresar</button>
+              <i class="fa fa-paper-plane"></i>
+              Enviar Solicitud
+            </button>
           </div>
-          <!-- /.col -->
         </div>
       </form>
-      <!-- Enlace para recuperar contraseña -->
-      <div class="text-center" style="margin-top: 15px;">
-        <a href="recuperar_password.php" style="color: #3498db; text-decoration: none; font-size: 14px;"
-          onmouseover="this.style.textDecoration='underline'"
-          onmouseout="this.style.textDecoration='none'">
-          <i class="fa fa-key" style="margin-right: 5px;"></i>
-          ¿Olvidaste tu contraseña?
+
+      <!-- Enlace para volver al login -->
+      <div class="back-to-login">
+        <a href="login.php">
+          <i class="fa fa-arrow-circle-left" style="margin-right: 5px;"></i>
+          Volver al inicio de sesión
         </a>
       </div>
 
-      <script>
-        function togglePassword() {
-          const passwordField = document.getElementById('passwordField');
-          const eyeIcon = document.getElementById('eyeIcon');
-
-          if (passwordField.type === 'password') {
-            passwordField.type = 'text';
-            eyeIcon.className = 'fa fa-eye-slash';
-            eyeIcon.style.color = '#3498db';
-          } else {
-            passwordField.type = 'password';
-            eyeIcon.className = 'fa fa-eye';
-            eyeIcon.style.color = '#666';
-          }
-        }
-      </script>
       <!-- Footer del sistema -->
       <div class="text-center" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border-top: 3px solid #3498db;">
         <div style="margin-bottom: 8px;">
@@ -129,8 +110,6 @@
           </small>
         </div>
       </div>
-      <!-- <br/>
-                <a href="registro.php" class="text-center">Registrarse</a> -->
     </div>
     <!-- /.login-box-body -->
   </div>
@@ -144,7 +123,7 @@
   <script src="../assets/plugins/iCheck/icheck.min.js"></script>
   <!-- SweetAlert2 -->
   <script src="../assets/plugins/sweetalert/sweetalert.min.js"></script>
-  <script src="../code/login.js"></script>
+  <script src="../code/recuperar_password.js"></script>
 </body>
 
 </html>

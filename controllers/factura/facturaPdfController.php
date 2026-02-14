@@ -168,8 +168,15 @@ $pdfString = $pdf->Output('S', $nombreArchivo);
 ob_end_clean(); // Limpia el buffer de salida
 
 // Solo enviar el PDF al correo si se recibe ?enviar=1
+
 if (isset($_GET['enviar']) && $_GET['enviar'] == '1' && !empty($clienteEmail)) {
-  enviarFacturaPorCorreo($clienteEmail, $pdfString, $nombreArchivo);
+  $datosFactura = [
+    'numero' => str_pad($facturaComprobante, 9, '0', STR_PAD_LEFT),
+    'fecha' => $facturaFecha,
+    'monto' => number_format($facturaTotal, 2),
+    'cliente' => $clienteNombres
+  ];
+  enviarFacturaPorCorreo($clienteEmail, $pdfString, $nombreArchivo, $datosFactura);
 }
 
 
