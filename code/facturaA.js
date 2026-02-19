@@ -12,7 +12,7 @@ const app = new (function () {
           html += "<thead>";
           html += "<tr>";
           html +=
-            "<th>Usuario facturado</th><th>Dni</th><th>Cliente(s)</th><th>Forma pago</th><th>Número factura</th><th>Fecha</th><th>Subtotal</th><th>Impuesto %</th><th>Total</th><th>Estado</th><th>Acción</th>";
+            "<th>Usuario facturado</th><th>Dni</th><th>Cliente(s)</th><th>Forma pago</th><th>Número factura</th><th>Fecha</th><th>Subtotal</th><th>Impuesto %</th><th>Descuento</th><th>Total</th><th>Estado</th><th>Acción</th>";
           html += "</tr>";
           html += "</thead>";
           html += "<tbody>";
@@ -42,6 +42,10 @@ const app = new (function () {
             html +=
               "<td class='text-red'>" +
               parseInt(element.factura_impuesto) +
+              "</td>";
+            html +=
+              "<td class='text-red'>" +
+              element.factura_descuento_global +
               "</td>";
             html +=
               "<td class='text-green'> <b>" +
@@ -105,7 +109,7 @@ const app = new (function () {
                 "Se ha procedido anular la factura y devuelto el stock vendido",
                 {
                   icon: "success",
-                }
+                },
               );
               this.listado();
             }

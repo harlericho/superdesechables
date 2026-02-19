@@ -170,6 +170,14 @@
                   </div>
                 </div>
                 <div class="form-group col-md-6">
+                  <label for="descuento_global">Descuento global</label>
+                  <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-percent"></i></span>
+                    <input type="number" min="0" max="100" step="0.01" class="form-control input-lg text-blue" name="descuento_global" id="descuento_global" placeholder="0" value="0">
+                  </div>
+                  <small class="text-muted">Porcentaje de descuento aplicado al subtotal</small>
+                </div>
+                <div class="form-group col-md-6">
                   <label for="stock">Total factura</label>
                   <div class="input-group has-success">
                     <span class="input-group-addon"><i class="fa fa-dollar"></i></span>

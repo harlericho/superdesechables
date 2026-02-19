@@ -13,6 +13,7 @@ const app = new (function () {
 
   this.numeroFactura = document.getElementsByName("numero_factura")[0];
   this.subTotalFactura = document.getElementsByName("subtotal_factura")[0];
+  this.descuentoGlobal = document.getElementsByName("descuento_global")[0];
   this.impuestoFactura = document.getElementsByName("impuesto_factura")[0];
   this.totalFactura = document.getElementsByName("total_factura")[0];
   this.clienteId = document.getElementsByName("cliente")[0];
@@ -276,22 +277,39 @@ const app = new (function () {
       .catch((err) => console.log(err));
   };
   this.calcularTotal = () => {
+    let subtotal = parseFloat(this.subTotalFactura.value) || 0;
+    let descuentoPorcentaje =
+      parseFloat(
+        this.descuentoGlobal && this.descuentoGlobal.value
+          ? this.descuentoGlobal.value
+          : 0,
+      ) || 0;
+    if (descuentoPorcentaje < 0) descuentoPorcentaje = 0;
+    if (descuentoPorcentaje > 100) descuentoPorcentaje = 100;
+    let descuento = subtotal * (descuentoPorcentaje / 100);
+    let base = subtotal - descuento;
+    if (base < 0) base = 0;
     let total = 0;
     if (
       this.impuestoFactura.value.length > 0 &&
       parseFloat(this.impuestoFactura.value) > 0
     ) {
-      total =
-        parseFloat(this.subTotalFactura.value) +
-        (parseFloat(this.subTotalFactura.value) *
-          parseFloat(this.impuestoFactura.value)) /
-          100;
+      total = base + (base * parseFloat(this.impuestoFactura.value)) / 100;
     } else {
-      // Si no hay impuesto, usar el subtotal directamente
-      total = parseFloat(this.subTotalFactura.value) || 0;
+      total = base;
     }
-    // Forzar el formateo a dos decimales SIEMPRE
     this.totalFactura.value = Number.isNaN(total) ? "0.00" : total.toFixed(2);
+
+    // Mostrar el descuento aplicado en el campo (opcional, para debug)
+    // document.getElementById('descuento_aplicado').value = descuento.toFixed(2);
+
+    // Si el descuento global cambia, recalcular en tiempo real
+    if (this.descuentoGlobal && !this._descuentoGlobalListener) {
+      this.descuentoGlobal.addEventListener("input", () => {
+        app.calcularTotal();
+      });
+      this._descuentoGlobalListener = true;
+    }
   };
 
   this.guardarFactura = () => {
@@ -311,6 +329,21 @@ const app = new (function () {
     }
 
     const form = new FormData(document.getElementById("formFactura"));
+    // Calcular el valor del descuento global y enviarlo al backend
+    let subtotal = parseFloat(this.subTotalFactura.value) || 0;
+    let descuentoPorcentaje =
+      parseFloat(
+        this.descuentoGlobal && this.descuentoGlobal.value
+          ? this.descuentoGlobal.value
+          : 0,
+      ) || 0;
+    if (descuentoPorcentaje < 0) descuentoPorcentaje = 0;
+    if (descuentoPorcentaje > 100) descuentoPorcentaje = 100;
+    let descuentoValor = subtotal * (descuentoPorcentaje / 100);
+    if (this.descuentoGlobal) {
+      form.set("descuento_global", descuentoValor.toFixed(2));
+      form.set("descuento_global_porcentaje", descuentoPorcentaje.toFixed(2));
+    }
     if (form.get("cliente") !== null) {
       if (form.get("comprobante") !== null) {
         fetch("../controllers/factura/facturaGuardarController.php", {

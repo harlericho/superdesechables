@@ -90,8 +90,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       // Remitente
       $mail->setFrom($config['from'], $config['from_name']);
 
-      // Destinatario
-      $mail->addAddress('info@solucionesitec.com', 'Administrador del Sistema');
+      // Destinatario elegie de empresa.ini
+      $mail->addAddress(Empresa::getEmail(), 'Administrador del Sistema');
 
       // Contenido del correo
       $mail->isHTML(true);

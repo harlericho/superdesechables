@@ -89,6 +89,8 @@ CREATE TABLE IF NOT EXISTS `tbl_factura` (
   `factura_fecha` date NOT NULL,
   `factura_subtotal` decimal(10,2) DEFAULT NULL,
   `factura_impuesto` decimal(10,2) DEFAULT NULL,
+  `factura_descuento_global` decimal(10,2) DEFAULT NULL,
+  `factura_descuento_global_porcentaje` decimal(10,2) DEFAULT NULL,
   `factura_total` decimal(10,2) DEFAULT NULL,
   `factura_created_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `factura_updated_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -315,3 +317,11 @@ CREATE TABLE IF NOT EXISTS `tbl_cierre_caja` (
   KEY `IX_cierre_usuario` (`cierre_usuario_id`),
   CONSTRAINT `FK_cierre_usuario` FOREIGN KEY (`cierre_usuario_id`) REFERENCES `tbl_usuario` (`usuario_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
+
+-- Agregar columna de descuento global y porcentaje a la tabla tbl_factura
+-- ALTER TABLE tbl_factura
+-- ADD COLUMN factura_descuento_global DECIMAL(10,2) DEFAULT NULL
+-- AFTER factura_impuesto;
+-- ALTER TABLE tbl_factura
+-- ADD COLUMN factura_descuento_global_porcentaje DECIMAL(10,2) DEFAULT 0
+-- AFTER factura_descuento_global;

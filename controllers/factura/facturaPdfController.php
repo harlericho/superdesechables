@@ -34,6 +34,8 @@ $usuarioEmail = $primerDetalle['usuario_email'];
 $facturaSubTotal = $primerDetalle['factura_subtotal'];
 $facturaImpuesto = $primerDetalle['factura_impuesto'];
 $facturaTotal = $primerDetalle['factura_total'];
+$facturaDescuentoValor = isset($primerDetalle['factura_descuento_global']) ? $primerDetalle['factura_descuento_global'] : 0;
+$facturaDescuentoPorcentaje = isset($primerDetalle['factura_descuento_global_porcentaje']) ? $primerDetalle['factura_descuento_global_porcentaje'] : 0;
 
 // Inicia el PDF
 $pdf = new FPDF('P', 'mm', 'A4');
@@ -115,7 +117,8 @@ foreach ($detallesFactura as $detalle) {
   $pdf->MultiCell(75, 7, utf8_decode($detalle['producto_nombre']), 1, 'L');
   $pdf->SetXY($x + 75, $y);
   $pdf->Cell(25, 7, '$ ' . number_format($detalle['detalle_precio_unit'], 2), 1, 0, 'R');
-  $pdf->Cell(22, 7, '$ ' . number_format($detalle['detalle_descuento'], 2), 1, 0, 'R');
+  $descuento = $detalle['detalle_descuento'] > 0 ? number_format($detalle['detalle_descuento'], 2) . '%' : '0.00%';
+  $pdf->Cell(22, 7, $descuento, 1, 0, 'R');
   $pdf->Cell(25, 7, '$ ' . number_format($detalle['detalle_total'], 2), 1, 1, 'R');
 }
 
@@ -145,8 +148,10 @@ $pdf->SetFont('Arial', 'B', 10);
 $pdf->Cell($anchoCol1, 7, 'SUBTOTAL', 1, 0, 'L');
 $pdf->Cell($anchoCol2, 7, '$ ' . number_format($facturaSubTotal, 2), 1, 1, 'R');
 $pdf->SetX($xTotales);
-$pdf->Cell($anchoCol1, 7, 'DESCUENTO', 1, 0, 'L');
-$pdf->Cell($anchoCol2, 7, '$ 0.00', 1, 1, 'R');
+$descuentoPorcentajeStr = rtrim(rtrim(number_format($facturaDescuentoPorcentaje, 2), '0'), '.');
+if ($descuentoPorcentajeStr === '') $descuentoPorcentajeStr = '0';
+$pdf->Cell($anchoCol1, 7, 'DESCUENTO (' . $descuentoPorcentajeStr . '%)', 1, 0, 'L');
+$pdf->Cell($anchoCol2, 7, '$ ' . number_format($facturaDescuentoValor, 2), 1, 1, 'R');
 $pdf->SetX($xTotales);
 $pdf->Cell($anchoCol1, 7, 'IVA 15%', 1, 0, 'L');
 $pdf->Cell($anchoCol2, 7, '$ ' . number_format($facturaSubTotal * $facturaImpuesto / 100, 2), 1, 1, 'R');
