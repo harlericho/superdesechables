@@ -69,9 +69,9 @@ class FacturaModel
   {
     try {
       $sql = "INSERT INTO tbl_factura (factura_num_comprobante,
-            factura_fecha, factura_subtotal, factura_descuento_global, factura_descuento_global_porcentaje, factura_impuesto, factura_total, cliente_id, usuario_id, tipo_comp_id)
-            VALUES (:factura_num_comprobante, :factura_fecha, :factura_subtotal, :factura_descuento_global, :factura_descuento_global_porcentaje,
-            :factura_impuesto, :factura_total, :cliente_id, :usuario_id, :tipo_comp_id)";
+        factura_fecha, factura_subtotal, factura_descuento_global, factura_descuento_global_porcentaje, factura_impuesto, factura_iva, factura_total, cliente_id, usuario_id, tipo_comp_id)
+        VALUES (:factura_num_comprobante, :factura_fecha, :factura_subtotal, :factura_descuento_global, :factura_descuento_global_porcentaje,
+        :factura_impuesto, :factura_iva, :factura_total, :cliente_id, :usuario_id, :tipo_comp_id)";
       $query = Db::dbConnection()->prepare($sql);
       $query->bindParam(":factura_num_comprobante", $data["factura_num_comprobante"], PDO::PARAM_STR);
       $query->bindParam(":factura_fecha", $data["factura_fecha"], PDO::PARAM_STR);
@@ -79,6 +79,7 @@ class FacturaModel
       $query->bindParam(":factura_descuento_global", $data["factura_descuento_global"], PDO::PARAM_STR);
       $query->bindParam(":factura_descuento_global_porcentaje", $data["factura_descuento_global_porcentaje"], PDO::PARAM_STR);
       $query->bindParam(":factura_impuesto", $data["factura_impuesto"], PDO::PARAM_STR);
+      $query->bindParam(":factura_iva", $data["factura_iva"], PDO::PARAM_STR);
       $query->bindParam(":factura_total", $data["factura_total"], PDO::PARAM_STR);
       $query->bindParam(":cliente_id", $data["cliente_id"], PDO::PARAM_INT);
       $query->bindParam(":usuario_id", $data["usuario_id"], PDO::PARAM_INT);

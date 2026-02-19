@@ -91,6 +91,7 @@ CREATE TABLE IF NOT EXISTS `tbl_factura` (
   `factura_impuesto` decimal(10,2) DEFAULT NULL,
   `factura_descuento_global` decimal(10,2) DEFAULT NULL,
   `factura_descuento_global_porcentaje` decimal(10,2) DEFAULT NULL,
+  `factura_iva` decimal(10,2) NOT NULL DEFAULT NULL,
   `factura_total` decimal(10,2) DEFAULT NULL,
   `factura_created_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `factura_updated_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -320,8 +321,11 @@ CREATE TABLE IF NOT EXISTS `tbl_cierre_caja` (
 
 -- Agregar columna de descuento global y porcentaje a la tabla tbl_factura
 -- ALTER TABLE tbl_factura
--- ADD COLUMN factura_descuento_global DECIMAL(10,2) DEFAULT NULL
+-- ADD COLUMN factura_descuento_global DECIMAL(10,2) DEFAULT 0
 -- AFTER factura_impuesto;
 -- ALTER TABLE tbl_factura
 -- ADD COLUMN factura_descuento_global_porcentaje DECIMAL(10,2) DEFAULT 0
 -- AFTER factura_descuento_global;
+-- Agregar columna de IVA a la tabla tbl_factura
+-- ALTER TABLE tbl_factura ADD COLUMN factura_iva DECIMAL(10,2) NOT NULL DEFAULT 0
+-- AFTER factura_descuento_global_porcentaje;

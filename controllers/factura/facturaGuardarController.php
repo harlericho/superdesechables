@@ -172,14 +172,25 @@ function txtR($text, $len)
 
 
 
+
+$factura_subtotal = floatval($_POST['subtotal_factura']);
+$factura_descuento = isset($_POST['descuento_global']) ? floatval($_POST['descuento_global']) : 0;
+$factura_descuento_porcentaje = isset($_POST['descuento_global_porcentaje']) ? floatval($_POST['descuento_global_porcentaje']) : 0;
+$factura_impuesto = floatval($_POST['impuesto_factura']);
+$base = $factura_subtotal - $factura_descuento;
+if ($base < 0) $base = 0;
+$factura_iva = ($base * $factura_impuesto) / 100;
+$factura_total = $base + $factura_iva;
+
 $arrayName = array(
     'factura_num_comprobante' => $_POST['numero_factura'],
     'factura_fecha' => $_POST['fecha_factura'],
-    'factura_impuesto' => $_POST['impuesto_factura'],
-    'factura_subtotal' => $_POST['subtotal_factura'],
-    'factura_descuento_global' => isset($_POST['descuento_global']) ? $_POST['descuento_global'] : 0,
-    'factura_descuento_global_porcentaje' => isset($_POST['descuento_global_porcentaje']) ? $_POST['descuento_global_porcentaje'] : 0,
-    'factura_total' =>  $_POST['total_factura'],
+    'factura_impuesto' => $factura_impuesto,
+    'factura_subtotal' => $factura_subtotal,
+    'factura_descuento_global' => $factura_descuento,
+    'factura_descuento_global_porcentaje' => $factura_descuento_porcentaje,
+    'factura_iva' => $factura_iva,
+    'factura_total' =>  $factura_total,
     'cliente_id' => $_POST['cliente'],
     'usuario_id' =>  $_POST['idUsuario'],
     'tipo_comp_id' => $_POST['comprobante']
