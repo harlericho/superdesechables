@@ -20,6 +20,7 @@ const app = new (function () {
   this.numeroFactura = document.getElementById("numero_factura");
 
   this.detalles = document.getElementById("tbody");
+  this._rawProductSum = 0;
 
   this.obtener = () => {
     var form = new FormData();
@@ -114,9 +115,8 @@ const app = new (function () {
         } else {
           this.detalles.innerHTML =
             "<tr><td colspan='7'>No hay detalles de productos</td></tr>";
-          this.subTotalFactura.value = "0.00";
-          this.totalFactura.value = "0.00";
-          this.calcularTotal(); // Calcular total (debería ser 0.00)
+          this._rawProductSum = 0;
+          this.calcularTotal();
         }
       })
       .catch((err) => console.log(err));
@@ -269,15 +269,17 @@ const app = new (function () {
     })
       .then((res) => res.json())
       .then((data) => {
-        this.subTotalFactura.value = parseFloat(data.total).toFixed(2);
-        // No establecer directamente el total, dejar que calcularTotal() lo haga
-        // this.totalFactura.value = parseFloat(data.total).toFixed(2);
-        this.calcularTotal(); // Calcular total con impuestos aplicados
+        this._rawProductSum = parseFloat(data.total) || 0;
+        this.calcularTotal();
       })
       .catch((err) => console.log(err));
   };
   this.calcularTotal = () => {
-    let subtotal = parseFloat(this.subTotalFactura.value) || 0;
+    const toggleEl = document.getElementById("toggleIncluyeIva");
+    const incluyeIva = toggleEl && toggleEl.checked;
+    const rawSum = this._rawProductSum;
+    const tax = parseFloat(this.impuestoFactura.value) || 0;
+
     let descuentoPorcentaje =
       parseFloat(
         this.descuentoGlobal && this.descuentoGlobal.value
@@ -286,24 +288,26 @@ const app = new (function () {
       ) || 0;
     if (descuentoPorcentaje < 0) descuentoPorcentaje = 0;
     if (descuentoPorcentaje > 100) descuentoPorcentaje = 100;
-    let descuento = subtotal * (descuentoPorcentaje / 100);
-    let base = subtotal - descuento;
-    if (base < 0) base = 0;
-    let total = 0;
-    if (
-      this.impuestoFactura.value.length > 0 &&
-      parseFloat(this.impuestoFactura.value) > 0
-    ) {
-      total = base + (base * parseFloat(this.impuestoFactura.value)) / 100;
+
+    if (incluyeIva && tax > 0) {
+      // Modo: precios de productos ya incluyen IVA
+      // rawSum = total con IVA incluido → back-calcular subtotal neto
+      let descuento = rawSum * (descuentoPorcentaje / 100);
+      let totalFinal = rawSum - descuento;
+      let subtotalNeto = totalFinal / (1 + tax / 100);
+      this.subTotalFactura.value = subtotalNeto.toFixed(2);
+      this.totalFactura.value = totalFinal.toFixed(2);
     } else {
-      total = base;
+      // Modo normal: rawSum es el subtotal sin IVA → agregar IVA encima
+      this.subTotalFactura.value = rawSum.toFixed(2);
+      let descuento = rawSum * (descuentoPorcentaje / 100);
+      let base = rawSum - descuento;
+      if (base < 0) base = 0;
+      let total = tax > 0 ? base + (base * tax) / 100 : base;
+      this.totalFactura.value = Number.isNaN(total) ? "0.00" : total.toFixed(2);
     }
-    this.totalFactura.value = Number.isNaN(total) ? "0.00" : total.toFixed(2);
 
-    // Mostrar el descuento aplicado en el campo (opcional, para debug)
-    // document.getElementById('descuento_aplicado').value = descuento.toFixed(2);
-
-    // Si el descuento global cambia, recalcular en tiempo real
+    // Listener para el descuento global
     if (this.descuentoGlobal && !this._descuentoGlobalListener) {
       this.descuentoGlobal.addEventListener("input", () => {
         app.calcularTotal();
@@ -339,10 +343,21 @@ const app = new (function () {
       ) || 0;
     if (descuentoPorcentaje < 0) descuentoPorcentaje = 0;
     if (descuentoPorcentaje > 100) descuentoPorcentaje = 100;
-    let descuentoValor = subtotal * (descuentoPorcentaje / 100);
     if (this.descuentoGlobal) {
-      form.set("descuento_global", descuentoValor.toFixed(2));
-      form.set("descuento_global_porcentaje", descuentoPorcentaje.toFixed(2));
+      const toggleIva = document.getElementById("toggleIncluyeIva");
+      const incluyeIvaGuardar = toggleIva && toggleIva.checked;
+      if (incluyeIvaGuardar) {
+        // Descuento calculado sobre el precio bruto (con IVA) para mostrar correctamente en PDF.
+        // El subtotal enviado ya es el neto post-descuento, el backend NO debe volver a restarlo.
+        let descuentoBruto = this._rawProductSum * (descuentoPorcentaje / 100);
+        form.set("descuento_global", descuentoBruto.toFixed(2));
+        form.set("descuento_global_porcentaje", descuentoPorcentaje.toFixed(2));
+        form.set("incluye_iva", "1");
+      } else {
+        let descuentoValor = subtotal * (descuentoPorcentaje / 100);
+        form.set("descuento_global", descuentoValor.toFixed(2));
+        form.set("descuento_global_porcentaje", descuentoPorcentaje.toFixed(2));
+      }
     }
     if (form.get("cliente") !== null) {
       if (form.get("comprobante") !== null) {
@@ -538,5 +553,11 @@ app.listadoDetalles();
 app.impuestoFactura.addEventListener("input", function () {
   app.calcularTotal();
 });
+// Toggle: precios con IVA incluido
+document
+  .getElementById("toggleIncluyeIva")
+  .addEventListener("change", function () {
+    app.calcularTotal();
+  });
 
 //app.recargar();

@@ -184,6 +184,18 @@
                     <input type="text" class="form-control input-lg text-green" name="total_factura" placeholder="0.00" readonly>
                   </div>
                 </div>
+                <div class="form-group col-md-6">
+                  <label style="display:block;">&nbsp;</label>
+                  <div class="checkbox" style="margin-top:6px; border:1px solid #d9a100; border-radius:4px; padding:8px 12px; background:#fffbe6;">
+                    <label>
+                      <input type="checkbox" id="toggleIncluyeIva" checked>
+                      <strong>Total incluye IVA</strong>
+                    </label>
+                    <small class="text-muted" style="display:block; margin-top:3px;">
+                      Al activar, los precios ya incluyen IVA y se calcula el subtotal neto automáticamente.
+                    </small>
+                  </div>
+                </div>
                 <!-- agregar un checkbox que deiga imprimir ticket -->
                 <div class="form-group col-md-12">
                   <div class="checkbox">
