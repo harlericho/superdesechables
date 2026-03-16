@@ -21,8 +21,52 @@ const app = new (function () {
 
   this.detalles = document.getElementById("tbody");
   this._rawProductSum = 0;
+  this.buscarTimeout = null; // Para el debounce
 
   this.obtener = () => {
+    // Limpiar el timeout anterior si existe
+    if (this.buscarTimeout) {
+      clearTimeout(this.buscarTimeout);
+    }
+
+    // Esperar 300ms antes de buscar (para que termine de escribir la pistola)
+    this.buscarTimeout = setTimeout(() => {
+      var form = new FormData();
+      form.append("codigo", this.codigo.value);
+      fetch("../controllers/venta/ventaListadoProdController.php", {
+        method: "POST",
+        body: form,
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data) {
+            this.id.value = data.producto_id;
+            this.nombre.value = data.producto_nombre;
+            this.descripcion.value = data.producto_descripcion;
+            this.precio_v.value = data.producto_precio_venta;
+            this.stock.value = data.producto_stock;
+            this.codigoMensaje.innerHTML =
+              "<small class='text-green'>Código encontrado</small>";
+          } else {
+            this.id.value = "";
+            this.nombre.value = "";
+            this.descripcion.value = "";
+            this.precio_v.value = "";
+            this.stock.value = "";
+            this.codigoMensaje.innerHTML =
+              "<small class='text-red'>Código no encontrado</small>";
+            this.codigo.focus();
+          }
+        })
+        .catch((err) => console.log(err));
+    }, 300);
+  };
+  this.buscarInmediato = () => {
+    // Buscar inmediatamente cuando se presiona Enter (sin debounce)
+    if (this.buscarTimeout) {
+      clearTimeout(this.buscarTimeout);
+    }
+
     var form = new FormData();
     form.append("codigo", this.codigo.value);
     fetch("../controllers/venta/ventaListadoProdController.php", {
@@ -453,7 +497,8 @@ const app = new (function () {
   }
   this.limpiar = () => {
     $("#formProductoDetalle")[0].reset();
-    this.mensajeInicio();
+    this.codigoMensaje.innerHTML =
+      "<small class='text-blue'>Debes escribir el código del producto</small>";
     this.id.value = "";
     this.codigo.focus();
   };
@@ -552,6 +597,16 @@ app.listadoDetalles();
 // Recalcular total cuando se modifica manualmente el porcentaje de impuesto
 app.impuestoFactura.addEventListener("input", function () {
   app.calcularTotal();
+});
+// Event listeners para el campo de código (pistola de código de barras)
+app.codigo.addEventListener("keyup", function (e) {
+  // Si presiona Enter, buscar inmediatamente
+  if (e.key === "Enter" || e.keyCode === 13) {
+    app.buscarInmediato();
+  } else {
+    // Para otras teclas, usar búsqueda con debounce
+    app.obtener();
+  }
 });
 // Toggle: precios con IVA incluido
 document

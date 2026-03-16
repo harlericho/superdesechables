@@ -48,7 +48,7 @@
                   <!-- <div id="codigo"></div> -->
                   <div class="input-group">
                     <span class="input-group-addon"><i class="fa fa-barcode"></i></span>
-                    <input type="text" class="form-control" maxlength="50" name="codigo" onkeyup="app.obtener()" placeholder="Código producto" autofocus>
+                    <input type="text" class="form-control" maxlength="50" name="codigo" id="inputCodigo" placeholder="Código producto" autofocus>
                   </div>
                   <div id="codigoMensaje"></div>
                 </div>
