@@ -98,4 +98,9 @@ class Empresa
     $config = self::getConfig();
     return $config['logologin'] ?? '';
   }
+  public static function getImpresoraTicket(): string
+  {
+    $config = self::getConfig();
+    return $config['impresora_ticket'] ?? 'XP-80C';
+  }
 }

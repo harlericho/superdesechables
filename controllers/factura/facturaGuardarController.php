@@ -141,8 +141,11 @@ function imprimirTicketPOS($facturaId, $usuarioId = null)
         error_log("Ticket generado: " . $tempFile . " (" . $bytesWritten . " bytes)");
 
         // Usar COPY /B a impresora compartida (como funcionó en el test)
+        $configPath = dirname(__DIR__, 2) . '/empresa.ini';
+        $configEmp = parse_ini_file($configPath, true);
+        $impresoraName = $configEmp['empresa']['impresora_ticket'] ?? 'XP-80C';
         $hostname = gethostname();
-        $command = 'copy /B "' . $tempFile . '" "\\\\' . $hostname . '\\XP-80C" 2>&1';
+        $command = 'copy /B "' . $tempFile . '" "\\\\' . $hostname . '\\' . $impresoraName . '" 2>&1';
         error_log("Ejecutando comando: " . $command);
 
         exec($command, $output, $returnCode);

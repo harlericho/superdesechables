@@ -468,9 +468,9 @@ const app = new (function () {
 
   // Función global para impresión QZ Tray
   function printTicketQZ(ticket) {
-    function doPrint() {
+    function doPrint(printerName) {
       qz.printers
-        .find("XP-80C")
+        .find(printerName)
         .then((printer) => {
           const config = qz.configs.create(printer);
           const data = [{ type: "raw", format: "plain", data: ticket }];
@@ -484,16 +484,29 @@ const app = new (function () {
           qz.websocket.disconnect();
         });
     }
-    if (!qz.websocket.isActive()) {
-      qz.websocket
-        .connect()
-        .then(doPrint)
-        .catch((err) => {
-          alert("No se pudo conectar a QZ Tray: " + err);
-        });
-    } else {
-      doPrint();
-    }
+    fetch("../controllers/configserie/configImpresoraObtenerController.php")
+      .then((r) => r.json())
+      .then((cfg) => {
+        const printerName = cfg && cfg.impresora ? cfg.impresora : "XP-80C";
+        if (!qz.websocket.isActive()) {
+          qz.websocket
+            .connect()
+            .then(() => doPrint(printerName))
+            .catch((err) => {
+              alert("No se pudo conectar a QZ Tray: " + err);
+            });
+        } else {
+          doPrint(printerName);
+        }
+      })
+      .catch(() => {
+        // Fallback: intentar con nombre por defecto
+        if (!qz.websocket.isActive()) {
+          qz.websocket.connect().then(() => doPrint("XP-80C"));
+        } else {
+          doPrint("XP-80C");
+        }
+      });
   }
   this.limpiar = () => {
     $("#formProductoDetalle")[0].reset();
