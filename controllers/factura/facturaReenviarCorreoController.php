@@ -88,14 +88,17 @@ $pdf->Cell(20, 7, utf8_decode('Teléfono:'), 1, 0, 'L');
 $pdf->SetFont('Arial', '', 10);
 $pdf->Cell(40, 7, $clienteTelefono, 1, 1, 'L');
 
+// Fila: Fecha de Emisión (ancho completo)
 $pdf->SetFont('Arial', 'B', 10);
 $pdf->Cell(65, 7, utf8_decode('Fecha de Emisión:'), 1, 0, 'L');
 $pdf->SetFont('Arial', '', 10);
-$pdf->Cell(65, 7, $facturaFecha, 1, 0, 'L');
+$pdf->Cell(125, 7, $facturaFecha, 1, 1, 'L');
+
+// Fila: Email (ancho completo)
 $pdf->SetFont('Arial', 'B', 10);
-$pdf->Cell(20, 7, utf8_decode('Email:'), 1, 0, 'L');
+$pdf->Cell(65, 7, utf8_decode('Email:'), 1, 0, 'L');
 $pdf->SetFont('Arial', '', 10);
-$pdf->Cell(40, 7, $clienteEmail, 1, 1, 'L');
+$pdf->Cell(125, 7, $clienteEmail, 1, 1, 'L');
 
 $pdf->SetFont('Arial', 'B', 10);
 $pdf->Cell(65, 7, utf8_decode('Dirección:'), 1, 0, 'L');
