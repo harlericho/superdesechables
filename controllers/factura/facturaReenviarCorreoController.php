@@ -119,10 +119,17 @@ $pdf->SetFont('Arial', '', 10);
 foreach ($detallesFactura as $detalle) {
   $pdf->Cell(28, 7, $detalle['producto_codigo'], 1, 0, 'C');
   $pdf->Cell(15, 7, $detalle['detalle_cantidad'], 1, 0, 'C');
-  $x = $pdf->GetX();
-  $y = $pdf->GetY();
-  $pdf->MultiCell(75, 7, utf8_decode($detalle['producto_nombre']), 1, 'L');
-  $pdf->SetXY($x + 75, $y);
+  // Truncar nombre si es muy largo
+  $nombreProducto = utf8_decode($detalle['producto_nombre']);
+  $pdf->SetFont('Arial', '', 9); // fuente un poco menor para descripción
+  if ($pdf->GetStringWidth($nombreProducto) > 73) {
+    while ($pdf->GetStringWidth($nombreProducto . '...') > 73) {
+      $nombreProducto = substr($nombreProducto, 0, -1);
+    }
+    $nombreProducto .= '...';
+  }
+  $pdf->Cell(75, 7, $nombreProducto, 1, 0, 'L');
+  $pdf->SetFont('Arial', '', 10); // restaurar fuente
   $pdf->Cell(25, 7, '$ ' . number_format($detalle['detalle_precio_unit'], 2), 1, 0, 'R');
   $descuento = $detalle['detalle_descuento'] > 0 ? number_format($detalle['detalle_descuento'], 2) . '%' : '0.00%';
   $pdf->Cell(22, 7, $descuento, 1, 0, 'R');
