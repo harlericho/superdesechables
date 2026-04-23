@@ -69,7 +69,7 @@
                     <label for="stock">Stock</label>
                     <div class="input-group">
                       <span class="input-group-addon"><i class="fa fa-sort-numeric-desc"></i></span>
-                      <input type="number" min="1" max="999" class="form-control" name="stock" placeholder="1" required>
+                      <input type="number" min="1" class="form-control" name="stock" placeholder="1" required>
                     </div>
                   </div>
                   <div class="form-group col-md-6">
