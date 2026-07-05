@@ -45,25 +45,38 @@ const app = new (function () {
               "</td>";
             html +=
               "<td class='text-red'>" +
-              element.factura_descuento_global +
+              (element.factura_descuento_global ?? "0.0") +
               "</td>";
             html +=
               "<td class='text-green'> <b>" +
               element.factura_total +
               "</b></td>";
             html += "<td><span class='badge bg-green'>Activo</span></td>";
+            html += "<td>";
             html +=
-              "<td>" +
-              "<button type='button' class='btn btn-danger btn-sm' style='margin-right: 5%;' title='Eliminar' onClick='app.eliminar(" +
+              "<button type='button' class='btn btn-danger btn-sm' style='margin-right: 5px;' title='Eliminar' onClick='app.eliminar(" +
               element.factura_id +
-              ")'><i class= 'fa fa-trash'></i></button> " +
+              ")'><i class= 'fa fa-trash'></i></button>";
+            html +=
               "<a href='../controllers/factura/facturaPdfController.php?factura_id=" +
               element.factura_id +
-              "' target='_black' class='btn btn-info btn-sm' title='Pdf'><i class='fa fa-file-pdf-o'></i></a> " +
+              "' target='_blank' class='btn btn-info btn-sm' style='margin-right: 5px;' title='Ver PDF'><i class='fa fa-file-pdf-o'></i></a>";
+            // Botón XML solo si tiene factura electrónica
+            if (element.fe_clave_acceso) {
+              html +=
+                "<a href='../controllers/facturacion_electronica/feDescargarXMLController.php?factura_id=" +
+                element.factura_id +
+                "' class='btn btn-success btn-sm' style='margin-right: 5px;' title='Descargar XML Firmado'><i class='fa fa-code'></i></a>";
+              html +=
+                "<a href='../controllers/facturacion_electronica/feVerLogsController.php?factura_id=" +
+                element.factura_id +
+                "' target='_blank' class='btn btn-primary btn-sm' style='margin-right: 5px;' title='Ver Logs SRI'><i class='fa fa-list'></i></a>";
+            }
+            html +=
               "<button type='button' class='btn btn-warning btn-sm' title='Reenviar' onClick='app.abrirModalCorreo(" +
               element.factura_id +
-              ")'><i class='fa fa-envelope'></i></button>" +
-              "</td>";
+              ")'><i class='fa fa-envelope'></i></button>";
+            html += "</td>";
             this.abrirModalCorreo = (factura_id) => {
               $("#correoDestino").val(""); // Limpiar el input de correo
               $("#modalCorreo").modal("show");

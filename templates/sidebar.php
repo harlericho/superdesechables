@@ -282,12 +282,12 @@ foreach (LoginModel::existeUsuarioEmailLogin($_SESSION['email']) as $key => $val
           </a>
           <ul class="treeview-menu">
             <li><a href="configserie.php"><i class="fa fa-circle-o"></i> Serie factura</a></li>
-            <li><a href="impresora.php"><i class="fa fa-circle-o"></i> Impresora tickets</a></li>
             <li><a href="rol.php"><i class="fa fa-circle-o"></i> Roles</a></li>
             <li><a href="usuario.php"><i class="fa fa-circle-o"></i> Usuarios</a></li>
             <li><a href="categoria.php"><i class="fa fa-circle-o"></i> Categoria productos</a></li>
             <li><a href="categoria_masivo.php"><i class="fa fa-circle-o"></i> Categoria productos masivo</a></li>
             <li><a href="impuesto.php"><i class="fa fa-circle-o"></i> Impuestos / IVA</a></li>
+            <li><a href="facturacion_electronica.php"><i class="fa fa-circle-o"></i> <strong>Facturación Electrónica</strong></a></li>
             <li><a href="proveedor.php"><i class="fa fa-circle-o"></i> Proveedores</a></li>
             <li><a href="comprobante.php"><i class="fa fa-circle-o"></i> Forma pago</a></li>
           </ul>

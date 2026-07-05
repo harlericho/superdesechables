@@ -21,6 +21,17 @@ if (empty($detallesFactura)) {
   die("Error: No se encontraron detalles para la factura.");
 }
 
+// Verificar si tiene facturación electrónica
+require_once '../../config/db.php';
+$sqlFE = "SELECT fe_clave_acceso, fe_numero_autorizacion, fe_fecha_autorizacion, fe_estado_sri
+          FROM tbl_factura_electronica 
+          WHERE factura_id = :factura_id 
+          LIMIT 1";
+$queryFE = Db::dbConnection()->prepare($sqlFE);
+$queryFE->bindParam(":factura_id", $factura_id, PDO::PARAM_INT);
+$queryFE->execute();
+$facturaElectronica = $queryFE->fetch(PDO::FETCH_ASSOC);
+
 $primerDetalle = $detallesFactura[0];
 $clienteNombres = $primerDetalle['cliente_nombres'] . " " . $primerDetalle['cliente_apellidos'];
 $clienteDni = $primerDetalle['cliente_dni'];
@@ -99,6 +110,45 @@ $pdf->SetFont('Arial', 'B', 10);
 $pdf->Cell(65, 7, utf8_decode('Dirección:'), 1, 0, 'L');
 $pdf->SetFont('Arial', '', 10);
 $pdf->Cell(190 - 65, 7, utf8_decode($clienteDireccion), 1, 1, 'L');
+
+
+// --- DATOS DE FACTURA ELECTRÓNICA (SI EXISTE) ---
+if ($facturaElectronica && !empty($facturaElectronica['fe_clave_acceso'])) {
+  $pdf->Ln(2);
+  $pdf->SetFillColor(220, 250, 220); // Verde claro
+  $pdf->SetFont('Arial', 'B', 9);
+  $pdf->Cell(190, 5, utf8_decode('INFORMACIÓN ELECTRÓNICA'), 1, 1, 'C', true);
+
+  $pdf->SetFont('Arial', 'B', 8);
+  $pdf->Cell(35, 5, utf8_decode('Clave de Acceso:'), 1, 0, 'L');
+  $pdf->SetFont('Arial', '', 7);
+  $pdf->Cell(155, 5, $facturaElectronica['fe_clave_acceso'], 1, 1, 'L');
+
+  if (!empty($facturaElectronica['fe_numero_autorizacion'])) {
+    $pdf->SetFont('Arial', 'B', 8);
+    $pdf->Cell(35, 5, utf8_decode('No. Autorización:'), 1, 0, 'L');
+    $pdf->SetFont('Arial', '', 8);
+    $pdf->Cell(95, 5, $facturaElectronica['fe_numero_autorizacion'], 1, 0, 'L');
+    $pdf->SetFont('Arial', 'B', 8);
+    $pdf->Cell(30, 5, utf8_decode('Fecha Autorización:'), 1, 0, 'L');
+    $pdf->SetFont('Arial', '', 8);
+    $pdf->Cell(30, 5, $facturaElectronica['fe_fecha_autorizacion'] ?? 'N/A', 1, 1, 'C');
+  }
+
+  $pdf->SetFont('Arial', 'B', 8);
+  $pdf->Cell(35, 5, 'Estado SRI:', 1, 0, 'L');
+  $pdf->SetFont('Arial', 'B', 8);
+  $estadoSRI = $facturaElectronica['fe_estado_sri'] ?? 'PENDIENTE';
+  if ($estadoSRI === 'AUTORIZADO') {
+    $pdf->SetTextColor(0, 128, 0); // verde
+  } elseif (in_array($estadoSRI, ['ERROR', 'NO_AUTORIZADO', 'ERROR_ENVIO'])) {
+    $pdf->SetTextColor(180, 0, 0); // rojo
+  } else {
+    $pdf->SetTextColor(200, 100, 0); // naranja para PENDIENTE/EN_PROCESO
+  }
+  $pdf->Cell(155, 5, $estadoSRI, 1, 1, 'L');
+  $pdf->SetTextColor(0, 0, 0); // restaurar negro
+}
 
 // --- TABLA DE PRODUCTOS MEJORADA ---
 

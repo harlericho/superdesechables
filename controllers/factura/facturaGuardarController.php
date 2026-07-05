@@ -8,6 +8,8 @@ include_once '../../models/tempModel.php';
 include_once '../../models/productoModel.php';
 include_once '../../models/clienteModel.php';
 include_once '../../models/usuarioModel.php';
+include_once '../../models/facturacionElectronicaModel.php';
+include_once '../../helpers/facturacion_electronica_service.php';
 
 use Mike42\Escpos\PrintConnectors\WindowsPrintConnector;
 use Mike42\Escpos\Printer;
@@ -234,6 +236,48 @@ if (FacturaModel::existeFacturaNumComprobante(strtolower($_POST['numero_factura'
             ProductoModel::actualizarProductoStockId($arrayStock);
         }
         if (TempModel::eliminarDatosTemp()) {
+            // FACTURACIÓN ELECTRÓNICA: Verificar si está activa
+            $facturaElectronica = null;
+            $configFE = FacturacionElectronicaModel::obtenerConfiguracionActiva();
+
+            if ($configFE) {
+                try {
+                    // Procesar factura electrónica automáticamente
+                    $resultado = FacturacionElectronicaService::procesarFacturaElectronica(
+                        $numFactura['factura_id'],
+                        $_POST['idUsuario']
+                    );
+
+                    if ($resultado['success']) {
+                        $estadoSRI = $resultado['estado_sri'] ?? 'PENDIENTE';
+                        $facturaElectronica = [
+                            'autorizado' => $resultado['autorizado'] ?? false,
+                            'clave_acceso' => $resultado['clave_acceso'],
+                            'numero_autorizacion' => $resultado['numero_autorizacion'] ?? null,
+                            'fecha_autorizacion' => $resultado['fecha_autorizacion'] ?? null,
+                            'estado_sri' => $estadoSRI,
+                            'mensaje' => $estadoSRI !== 'AUTORIZADO'
+                                ? 'Factura guardada pero el SRI respondió con estado: ' . $estadoSRI . '. Puede reenviarla desde el módulo de facturas.'
+                                : null
+                        ];
+                    } else {
+                        // Si falla, registrar error pero NO bloquear la venta
+                        error_log("Error FE: " . $resultado['mensaje']);
+                        $facturaElectronica = [
+                            'autorizado' => false,
+                            'error' => $resultado['mensaje']
+                        ];
+                    }
+                } catch (Exception $e) {
+                    error_log("Excepción FE: " . $e->getMessage());
+                    $facturaElectronica = [
+                        'autorizado' => false,
+                        'error' => $e->getMessage()
+                    ];
+                }
+            }
+
+            // Incrementar el secuencial DESPUÉS de procesar la factura electrónica
             FacturaModel::aumentarSecuencialSerie();
 
             // Imprimir ticket si está marcado el checkbox
@@ -247,7 +291,8 @@ if (FacturaModel::existeFacturaNumComprobante(strtolower($_POST['numero_factura'
             echo json_encode(array(
                 'status' => 1,
                 'factura_id' => $numFactura['factura_id'],
-                'ticket_impreso' => $ticketImpreso
+                'ticket_impreso' => $ticketImpreso,
+                'factura_electronica' => $facturaElectronica
             ));
         } else {
             echo json_encode(array('status' => 0));

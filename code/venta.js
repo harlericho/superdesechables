@@ -413,25 +413,54 @@ const app = new (function () {
           .then((data) => {
             this.totalFactura.value = "0.00";
             if (data === 1 || data.status === 1) {
-              // Impresión automática con QZ Tray si el checkbox está marcado
-              if (document.getElementById("imprimirTicketCheckbox").checked) {
-                fetch(
-                  `../controllers/factura/facturaTicketDataController.php?factura_id=${data.factura_id}`,
-                )
-                  .then((res) => res.json())
-                  .then((ticketData) => {
-                    if (ticketData && ticketData.ticket_escpos) {
-                      printTicketQZ(ticketData.ticket_escpos);
-                    } else {
-                      console.error("No se recibió ticket_escpos:", ticketData);
-                    }
-                  })
-                  .catch((err) => {
-                    console.error("Error al obtener el ticket:", err);
-                  });
+              // El ticket se imprime automáticamente desde PHP si checkbox está marcado
+
+              // Verificar si se generó factura electrónica
+              let mensaje = "Factura registrada!!";
+              if (data.factura_electronica) {
+                const fe = data.factura_electronica;
+                if (fe.autorizado) {
+                  mensaje =
+                    "¡Factura electrónica AUTORIZADA por el SRI!\n\nClave de acceso: " +
+                    fe.clave_acceso.substring(0, 20) +
+                    "...";
+                } else if (
+                  fe.estado_sri === "EN_PROCESO" ||
+                  fe.estado_sri === "PENDIENTE"
+                ) {
+                  mensaje =
+                    "Factura guardada. El SRI está procesando el comprobante.\n" +
+                    "Estado: " +
+                    fe.estado_sri +
+                    "\nPuede verificar más tarde.";
+                } else {
+                  mensaje =
+                    "Factura guardada. " +
+                    (fe.mensaje ||
+                      "Error al autorizar en el SRI. Estado: " +
+                        (fe.estado_sri || "ERROR"));
+                }
               }
 
-              swal("Factura registrada!!", {
+              swal(mensaje, {
+                // // Impresión automática con QZ Tray si el checkbox está marcado
+                // if (document.getElementById("imprimirTicketCheckbox").checked) {
+                //   fetch(
+                //     `../controllers/factura/facturaTicketDataController.php?factura_id=${data.factura_id}`,
+                //   )
+                //     .then((res) => res.json())
+                //     .then((ticketData) => {
+                //       if (ticketData && ticketData.ticket_escpos) {
+                //         printTicketQZ(ticketData.ticket_escpos);
+                //       } else {
+                //         console.error("No se recibió ticket_escpos:", ticketData);
+                //       }
+                //     })
+                //     .catch((err) => {
+                //       console.error("Error al obtener el ticket:", err);
+                //     });
+                // }
+                // swal("Factura registrada!!", {
                 icon: "success",
               }).then(() => {
                 // Abrir la factura en una nueva ventana

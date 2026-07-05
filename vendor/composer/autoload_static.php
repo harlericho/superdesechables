@@ -6,99 +6,107 @@ namespace Composer\Autoload;
 
 class ComposerStaticInit870e9b9214bb0fa110f654f69146fd90
 {
-    public static $files = array(
+    public static $files = array (
         '0e6d7bf4a5811bfa5cf40c5ccd6fae6a' => __DIR__ . '/..' . '/symfony/polyfill-mbstring/bootstrap.php',
         '2cffec82183ee1cea088009cef9a6fc3' => __DIR__ . '/..' . '/ezyang/htmlpurifier/library/HTMLPurifier.composer.php',
     );
 
-    public static $prefixLengthsPsr4 = array(
+    public static $prefixLengthsPsr4 = array (
         'Z' =>
-        array(
+        array (
             'ZipStream\\' => 10,
         ),
         'S' =>
-        array(
+        array (
             'Symfony\\Polyfill\\Mbstring\\' => 26,
         ),
+        'R' =>
+        array (
+            'RobRichards\\XMLSecLibs\\' => 23,
+        ),
         'P' =>
-        array(
+        array (
             'Psr\\SimpleCache\\' => 16,
             'Psr\\Http\\Message\\' => 17,
             'PhpOffice\\PhpSpreadsheet\\' => 25,
             'PHPMailer\\PHPMailer\\' => 20,
         ),
         'M' =>
-        array(
+        array (
             'MyCLabs\\Enum\\' => 13,
             'Mike42\\' => 7,
             'Matrix\\' => 7,
         ),
         'C' =>
-        array(
+        array (
             'Composer\\Pcre\\' => 14,
             'Complex\\' => 8,
         ),
     );
 
-    public static $prefixDirsPsr4 = array(
+    public static $prefixDirsPsr4 = array (
         'ZipStream\\' =>
-        array(
+        array (
             0 => __DIR__ . '/..' . '/maennchen/zipstream-php/src',
         ),
         'Symfony\\Polyfill\\Mbstring\\' =>
-        array(
+        array (
             0 => __DIR__ . '/..' . '/symfony/polyfill-mbstring',
         ),
+        'RobRichards\\XMLSecLibs\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/robrichards/xmlseclibs/src',
+        ),
         'Psr\\SimpleCache\\' =>
-        array(
+        array (
             0 => __DIR__ . '/..' . '/psr/simple-cache/src',
         ),
         'Psr\\Http\\Message\\' =>
-        array(
+        array (
             0 => __DIR__ . '/..' . '/psr/http-message/src',
         ),
         'PhpOffice\\PhpSpreadsheet\\' =>
-        array(
+        array (
             0 => __DIR__ . '/..' . '/phpoffice/phpspreadsheet/src/PhpSpreadsheet',
         ),
         'PHPMailer\\PHPMailer\\' =>
-        array(
+        array (
             0 => __DIR__ . '/..' . '/phpmailer/phpmailer/src',
         ),
         'MyCLabs\\Enum\\' =>
-        array(
+        array (
             0 => __DIR__ . '/..' . '/myclabs/php-enum/src',
         ),
         'Mike42\\' =>
-        array(
+        array (
             0 => __DIR__ . '/..' . '/mike42/escpos-php/src/Mike42',
             1 => __DIR__ . '/..' . '/mike42/gfx-php/src/Mike42',
         ),
         'Matrix\\' =>
-        array(
+        array (
             0 => __DIR__ . '/..' . '/markbaker/matrix/classes/src',
         ),
         'Composer\\Pcre\\' =>
-        array(
+        array (
             0 => __DIR__ . '/..' . '/composer/pcre/src',
         ),
         'Complex\\' =>
-        array(
+        array (
             0 => __DIR__ . '/..' . '/markbaker/complex/classes/src',
         ),
     );
 
-    public static $prefixesPsr0 = array(
+    public static $prefixesPsr0 = array (
         'H' =>
-        array(
+        array (
             'HTMLPurifier' =>
-            array(
+            array (
                 0 => __DIR__ . '/..' . '/ezyang/htmlpurifier/library',
             ),
         ),
     );
 
-    public static $classMap = array(
+    public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
         'Stringable' => __DIR__ . '/..' . '/myclabs/php-enum/stubs/Stringable.php',
     );
@@ -110,6 +118,7 @@ class ComposerStaticInit870e9b9214bb0fa110f654f69146fd90
             $loader->prefixDirsPsr4 = ComposerStaticInit870e9b9214bb0fa110f654f69146fd90::$prefixDirsPsr4;
             $loader->prefixesPsr0 = ComposerStaticInit870e9b9214bb0fa110f654f69146fd90::$prefixesPsr0;
             $loader->classMap = ComposerStaticInit870e9b9214bb0fa110f654f69146fd90::$classMap;
+
         }, null, ClassLoader::class);
     }
 }

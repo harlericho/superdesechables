@@ -126,6 +126,26 @@ class DetalleModel
       echo $e->getMessage();
     }
   }
+
+  /**
+   * Obtener detalles de una factura con información de productos
+   */
+  public static function obtenerDetallesPorFactura($facturaId)
+  {
+    try {
+      $sql = "SELECT d.*, p.producto_codigo, p.producto_nombre 
+              FROM tbl_detalle d
+              INNER JOIN tbl_producto p ON d.producto_id = p.producto_id
+              WHERE d.factura_id = :factura_id AND d.detalle_estado = '1'";
+      $query = Db::dbConnection()->prepare($sql);
+      $query->bindParam(":factura_id", $facturaId, PDO::PARAM_INT);
+      $query->execute();
+      return $query->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+      error_log("Error al obtener detalles: " . $e->getMessage());
+      return [];
+    }
+  }
   public static function eliminarDetalleId($id)
   {
     try {
