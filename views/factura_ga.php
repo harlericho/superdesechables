@@ -59,23 +59,39 @@
     <div class="modal-dialog" role="document">
       <form id="formCorreoFactura">
         <div class="modal-content">
-          <div class="modal-header">
+          <div class="modal-header" id="correoModalHeader">
             <h5 class="modal-title">Reenviar Factura</h5>
             <button type="button" class="close" data-dismiss="modal">&times;</button>
           </div>
-          <div class="modal-body">
+
+          <!-- Formulario normal -->
+          <div class="modal-body" id="correoFormBody">
             <input type="hidden" id="facturaIdCorreo" name="factura_id">
             <div class="form-group">
               <label for="correoDestino">Correo destino</label>
               <input type="email" class="form-control" id="correoDestino" name="correo" required>
             </div>
           </div>
-          <div class="modal-footer">
-            <button type="submit" class="btn btn-primary">Enviar</button>
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <div class="modal-footer" id="correoFormFooter">
+            <button type="submit" class="btn btn-primary"><i class="fa fa-send"></i> Enviar</button>
+            <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
           </div>
+
+          <!-- Estado de progreso (oculto por defecto) -->
+          <div class="modal-body" id="correoProgresoBody" style="display:none;text-align:center;padding:28px 24px 24px;">
+            <i class="fa fa-envelope fa-2x fa-spin" style="color:#3498db;margin-bottom:12px;"></i>
+            <h4 style="font-size:15px;color:#2c3e50;margin:0 0 5px;" id="correoPasoTitulo">Preparando envío...</h4>
+            <p style="font-size:12px;color:#888;margin-bottom:14px;" id="correoPasoDetalle">Por favor espere</p>
+            <div class="progress" style="height:10px;border-radius:5px;margin-bottom:6px;">
+              <div class="progress-bar progress-bar-striped active" id="correoProgressBar"
+                role="progressbar" style="width:5%;border-radius:5px;transition:width .6s ease;"></div>
+            </div>
+            <small style="color:#aaa;" id="correoPasoNum">Paso 1 de 4</small>
+          </div>
+
         </div>
       </form>
     </div>
   </div>
+
   <script src="../code/facturaGA.js"></script>

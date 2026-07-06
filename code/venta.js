@@ -403,67 +403,116 @@ const app = new (function () {
         form.set("descuento_global_porcentaje", descuentoPorcentaje.toFixed(2));
       }
     }
-    if (form.get("cliente") !== null) {
-      if (form.get("comprobante") !== null) {
+        if (form.get("cliente") === null) {
+          swal("Atención!", "Seleccione un cliente", "warning");
+          return;
+        }
+        if (form.get("comprobante") === null) {
+          swal("Atención!", "Seleccione un comprobante", "warning");
+          return;
+        }
+
+        // ── Mostrar modal de progreso SRI ────────────────────────────────────────
+        const pasos = [
+          {
+            titulo: "Registrando venta...",
+            detalle: "Guardando factura en el sistema",
+            pct: 10,
+            label: "Paso 1 de 5",
+          },
+          {
+            titulo: "Generando XML electrónico...",
+            detalle: "Preparando comprobante para el SRI",
+            pct: 30,
+            label: "Paso 2 de 5",
+          },
+          {
+            titulo: "Firmando con certificado digital...",
+            detalle: "Aplicando firma XAdES-BES",
+            pct: 50,
+            label: "Paso 3 de 5",
+          },
+          {
+            titulo: "Conectando al SRI Ecuador...",
+            detalle: "Estableciendo conexión segura con celcer.sri.gob.ec",
+            pct: 68,
+            label: "Paso 4 de 5",
+          },
+          {
+            titulo: "Esperando autorización del SRI...",
+            detalle: "El SRI está validando el comprobante",
+            pct: 85,
+            label: "Paso 5 de 5",
+          },
+        ];
+        const timers = [];
+        let pasoActual = 0;
+
+        const actualizarPaso = (idx) => {
+          const p = pasos[idx];
+          document.getElementById("sriPasoTitulo").textContent = p.titulo;
+          document.getElementById("sriPasoDetalle").textContent = p.detalle;
+          document.getElementById("sriProgressBar").style.width = p.pct + "%";
+          document.getElementById("sriPasoNum").textContent = p.label;
+        };
+
+        actualizarPaso(0);
+        $("#modalSriProceso").modal("show");
+
+        // Tiempos estimados para cada paso siguiente
+        const delays = [1800, 3200, 5000, 7500];
+        delays.forEach((ms, i) => {
+          timers.push(setTimeout(() => actualizarPaso(i + 1), ms));
+        });
+
+        const cerrarModal = () => {
+          timers.forEach(clearTimeout);
+          document.getElementById("sriProgressBar").style.width = "100%";
+          setTimeout(() => $("#modalSriProceso").modal("hide"), 350);
+        };
+        // ── Fin modal progreso ───────────────────────────────────────────────────
+
         fetch("../controllers/factura/facturaGuardarController.php", {
           method: "POST",
           body: form,
         })
           .then((res) => res.json())
           .then((data) => {
+            cerrarModal();
             this.totalFactura.value = "0.00";
             if (data === 1 || data.status === 1) {
-              // El ticket se imprime automáticamente desde PHP si checkbox está marcado
-
-              // Verificar si se generó factura electrónica
               let mensaje = "Factura registrada!!";
+              let icono = "success";
               if (data.factura_electronica) {
                 const fe = data.factura_electronica;
                 if (fe.autorizado) {
                   mensaje =
-                    "¡Factura electrónica AUTORIZADA por el SRI!\n\nClave de acceso: " +
-                    fe.clave_acceso.substring(0, 20) +
+                    "¡Factura electrónica AUTORIZADA por el SRI!\n\nN° Autorización: " +
+                    (fe.numero_autorizacion || fe.clave_acceso || "").substring(
+                      0,
+                      24,
+                    ) +
                     "...";
                 } else if (
                   fe.estado_sri === "EN_PROCESO" ||
                   fe.estado_sri === "PENDIENTE"
                 ) {
                   mensaje =
-                    "Factura guardada. El SRI está procesando el comprobante.\n" +
-                    "Estado: " +
+                    "Factura guardada. El SRI está procesando el comprobante.\nEstado: " +
                     fe.estado_sri +
                     "\nPuede verificar más tarde.";
+                  icono = "warning";
                 } else {
                   mensaje =
                     "Factura guardada. " +
                     (fe.mensaje ||
                       "Error al autorizar en el SRI. Estado: " +
                         (fe.estado_sri || "ERROR"));
+                  icono = "warning";
                 }
               }
 
-              swal(mensaje, {
-                // // Impresión automática con QZ Tray si el checkbox está marcado
-                // if (document.getElementById("imprimirTicketCheckbox").checked) {
-                //   fetch(
-                //     `../controllers/factura/facturaTicketDataController.php?factura_id=${data.factura_id}`,
-                //   )
-                //     .then((res) => res.json())
-                //     .then((ticketData) => {
-                //       if (ticketData && ticketData.ticket_escpos) {
-                //         printTicketQZ(ticketData.ticket_escpos);
-                //       } else {
-                //         console.error("No se recibió ticket_escpos:", ticketData);
-                //       }
-                //     })
-                //     .catch((err) => {
-                //       console.error("Error al obtener el ticket:", err);
-                //     });
-                // }
-                // swal("Factura registrada!!", {
-                icon: "success",
-              }).then(() => {
-                // Abrir la factura en una nueva ventana
+              swal(mensaje, { icon: icono }).then(() => {
                 const facturaId = data.factura_id;
                 window.open(
                   "../controllers/factura/facturaPdfController.php?factura_id=" +
@@ -475,24 +524,112 @@ const app = new (function () {
               this.limpiar_factura();
               this.listadoDetalles();
               this.mostrarSerieFactura();
-              this.cargarImpuestoActivo(); // Recargar impuesto después de la venta
+              this.cargarImpuestoActivo();
             } else if (data === 2 || data.status === 2) {
-              swal("Numero de factura ya existe!!", {
-                icon: "error",
-              });
+              swal("Numero de factura ya existe!!", { icon: "error" });
               this.numeroFactura.focus();
               this.calcularTotal();
             }
           })
-          .catch((err) => console.log(err));
-      } else {
-        swal("Atención!", "Seleccione un comprobante", "warning");
-        return;
-      }
-    } else {
-      swal("Atención!", "Seleccione un cliente", "warning");
-      return;
-    }
+          .catch((err) => {
+            cerrarModal();
+            console.log(err);
+            swal(
+              "Error",
+              "No se pudo completar la venta. Verifique la conexión.",
+              "error",
+            );
+          });
+    // if (form.get("cliente") !== null) {
+    //   if (form.get("comprobante") !== null) {
+    //     fetch("../controllers/factura/facturaGuardarController.php", {
+    //       method: "POST",
+    //       body: form,
+    //     })
+    //       .then((res) => res.json())
+    //       .then((data) => {
+    //         this.totalFactura.value = "0.00";
+    //         if (data === 1 || data.status === 1) {
+    //           // El ticket se imprime automáticamente desde PHP si checkbox está marcado
+
+    //           // Verificar si se generó factura electrónica
+    //           let mensaje = "Factura registrada!!";
+    //           if (data.factura_electronica) {
+    //             const fe = data.factura_electronica;
+    //             if (fe.autorizado) {
+    //               mensaje =
+    //                 "¡Factura electrónica AUTORIZADA por el SRI!\n\nClave de acceso: " +
+    //                 fe.clave_acceso.substring(0, 20) +
+    //                 "...";
+    //             } else if (
+    //               fe.estado_sri === "EN_PROCESO" ||
+    //               fe.estado_sri === "PENDIENTE"
+    //             ) {
+    //               mensaje =
+    //                 "Factura guardada. El SRI está procesando el comprobante.\n" +
+    //                 "Estado: " +
+    //                 fe.estado_sri +
+    //                 "\nPuede verificar más tarde.";
+    //             } else {
+    //               mensaje =
+    //                 "Factura guardada. " +
+    //                 (fe.mensaje ||
+    //                   "Error al autorizar en el SRI. Estado: " +
+    //                     (fe.estado_sri || "ERROR"));
+    //             }
+    //           }
+
+    //           swal(mensaje, {
+    //             // // Impresión automática con QZ Tray si el checkbox está marcado
+    //             // if (document.getElementById("imprimirTicketCheckbox").checked) {
+    //             //   fetch(
+    //             //     `../controllers/factura/facturaTicketDataController.php?factura_id=${data.factura_id}`,
+    //             //   )
+    //             //     .then((res) => res.json())
+    //             //     .then((ticketData) => {
+    //             //       if (ticketData && ticketData.ticket_escpos) {
+    //             //         printTicketQZ(ticketData.ticket_escpos);
+    //             //       } else {
+    //             //         console.error("No se recibió ticket_escpos:", ticketData);
+    //             //       }
+    //             //     })
+    //             //     .catch((err) => {
+    //             //       console.error("Error al obtener el ticket:", err);
+    //             //     });
+    //             // }
+    //             // swal("Factura registrada!!", {
+    //             icon: "success",
+    //           }).then(() => {
+    //             // Abrir la factura en una nueva ventana
+    //             const facturaId = data.factura_id;
+    //             window.open(
+    //               "../controllers/factura/facturaPdfController.php?factura_id=" +
+    //                 facturaId +
+    //                 "&enviar=1",
+    //               "_blank",
+    //             );
+    //           });
+    //           this.limpiar_factura();
+    //           this.listadoDetalles();
+    //           this.mostrarSerieFactura();
+    //           this.cargarImpuestoActivo(); // Recargar impuesto después de la venta
+    //         } else if (data === 2 || data.status === 2) {
+    //           swal("Numero de factura ya existe!!", {
+    //             icon: "error",
+    //           });
+    //           this.numeroFactura.focus();
+    //           this.calcularTotal();
+    //         }
+    //       })
+    //       .catch((err) => console.log(err));
+    //   } else {
+    //     swal("Atención!", "Seleccione un comprobante", "warning");
+    //     return;
+    //   }
+    // } else {
+    //   swal("Atención!", "Seleccione un cliente", "warning");
+    //   return;
+    // }
   };
 
   // Función global para impresión QZ Tray

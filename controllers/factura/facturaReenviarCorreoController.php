@@ -37,6 +37,16 @@ $facturaTotal = $primerDetalle['factura_total'];
 $facturaDescuentoValor = isset($primerDetalle['factura_descuento_global']) ? $primerDetalle['factura_descuento_global'] : 0;
 $facturaDescuentoPorcentaje = isset($primerDetalle['factura_descuento_global_porcentaje']) ? $primerDetalle['factura_descuento_global_porcentaje'] : 0;
 
+// Datos de factura electrónica (necesarios antes de generar el PDF)
+require_once '../../config/db.php';
+$qFE = Db::dbConnection()->prepare(
+  "SELECT fe_clave_acceso, fe_numero_autorizacion, fe_fecha_autorizacion,
+          fe_estado_sri, fe_xml_autorizado
+   FROM tbl_factura_electronica WHERE factura_id = ? LIMIT 1"
+);
+$qFE->execute([$factura_id]);
+$facturaElectronica = $qFE->fetch(PDO::FETCH_ASSOC) ?: null;
+
 // Inicia el PDF
 $pdf = new FPDF('P', 'mm', 'A4');
 $pdf->AddPage();
@@ -104,6 +114,45 @@ $pdf->SetFont('Arial', 'B', 10);
 $pdf->Cell(65, 7, utf8_decode('Dirección:'), 1, 0, 'L');
 $pdf->SetFont('Arial', '', 10);
 $pdf->Cell(190 - 65, 7, utf8_decode($clienteDireccion), 1, 1, 'L');
+
+
+// --- DATOS DE FACTURA ELECTRÓNICA (SI EXISTE) ---
+if ($facturaElectronica && !empty($facturaElectronica['fe_clave_acceso'])) {
+  $pdf->Ln(2);
+  $pdf->SetFillColor(220, 250, 220);
+  $pdf->SetFont('Arial', 'B', 9);
+  $pdf->Cell(190, 5, utf8_decode('INFORMACIÓN ELECTRÓNICA'), 1, 1, 'C', true);
+
+  $pdf->SetFont('Arial', 'B', 8);
+  $pdf->Cell(35, 5, utf8_decode('Clave de Acceso:'), 1, 0, 'L');
+  $pdf->SetFont('Arial', '', 7);
+  $pdf->Cell(155, 5, $facturaElectronica['fe_clave_acceso'], 1, 1, 'L');
+
+  if (!empty($facturaElectronica['fe_numero_autorizacion'])) {
+    $pdf->SetFont('Arial', 'B', 8);
+    $pdf->Cell(35, 5, utf8_decode('No. Autorización:'), 1, 0, 'L');
+    $pdf->SetFont('Arial', '', 8);
+    $pdf->Cell(95, 5, $facturaElectronica['fe_numero_autorizacion'], 1, 0, 'L');
+    $pdf->SetFont('Arial', 'B', 8);
+    $pdf->Cell(30, 5, utf8_decode('Fecha Autorización:'), 1, 0, 'L');
+    $pdf->SetFont('Arial', '', 8);
+    $pdf->Cell(30, 5, $facturaElectronica['fe_fecha_autorizacion'] ?? 'N/A', 1, 1, 'C');
+  }
+
+  $pdf->SetFont('Arial', 'B', 8);
+  $pdf->Cell(35, 5, 'Estado SRI:', 1, 0, 'L');
+  $estadoSRI = $facturaElectronica['fe_estado_sri'] ?? 'PENDIENTE';
+  if ($estadoSRI === 'AUTORIZADO') {
+    $pdf->SetTextColor(0, 128, 0);
+  } elseif (in_array($estadoSRI, ['ERROR', 'NO_AUTORIZADO', 'ERROR_ENVIO'])) {
+    $pdf->SetTextColor(180, 0, 0);
+  } else {
+    $pdf->SetTextColor(200, 100, 0);
+  }
+  $pdf->SetFont('Arial', 'B', 8);
+  $pdf->Cell(155, 5, $estadoSRI, 1, 1, 'L');
+  $pdf->SetTextColor(0, 0, 0);
+}
 
 // --- TABLA DE PRODUCTOS MEJORADA ---
 
@@ -186,13 +235,29 @@ $pdf->MultiCell(0, 6, utf8_decode("El cliente se compromete a pagar la factura e
 $nombreArchivo = preg_replace('/[^A-Za-z0-9\-]/', '', $facturaComprobante) . '.pdf';
 $pdfString = $pdf->Output('S', $nombreArchivo);
 
+// Usar datos FE ya cargados al inicio
+$sriAutorizado = $facturaElectronica && ($facturaElectronica['fe_estado_sri'] ?? '') === 'AUTORIZADO';
+$xmlParaEmail = null;
+if ($sriAutorizado) {
+  $xmlRaw = $facturaElectronica['fe_xml_autorizado'] ?? '';
+  if ($xmlRaw && strpos($xmlRaw, '&lt;') !== false) {
+    $xmlRaw = html_entity_decode($xmlRaw, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+  }
+  $xmlParaEmail = $xmlRaw ?: null;
+}
+
+if (!$sriAutorizado) {
+  echo json_encode(['success' => false, 'message' => 'La factura no está autorizada por el SRI. No se envió el correo.']);
+  exit;
+}
+
 $datosFactura = [
   'numero' => str_pad($facturaComprobante, 9, '0', STR_PAD_LEFT),
   'fecha' => $facturaFecha,
   'monto' => number_format($facturaTotal, 2),
   'cliente' => $clienteNombres
 ];
-$enviado = enviarFacturaPorCorreo($correo, $pdfString, $nombreArchivo, $datosFactura);
+$enviado = enviarFacturaPorCorreo($correo, $pdfString, $nombreArchivo, $datosFactura, $xmlParaEmail);
 
 if ($enviado) {
   echo json_encode(['success' => true]);

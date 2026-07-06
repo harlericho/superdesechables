@@ -152,12 +152,78 @@ $(document).ready(function () {
   $("#formCorreoFactura").on("submit", function (e) {
     e.preventDefault();
     var formData = new FormData(this);
+    // ── Pasar a modo progreso ─────────────────────────────────────────────
+    const pasos = [
+      {
+        titulo: "Preparando factura...",
+        detalle: "Cargando datos e imágenes",
+        pct: 15,
+        label: "Paso 1 de 4",
+      },
+      {
+        titulo: "Generando PDF adjunto...",
+        detalle: "Construyendo documento para el destinatario",
+        pct: 42,
+        label: "Paso 2 de 4",
+      },
+      {
+        titulo: "Conectando al servidor de correo...",
+        detalle: "Autenticando con el servidor SMTP",
+        pct: 70,
+        label: "Paso 3 de 4",
+      },
+      {
+        titulo: "Enviando correo...",
+        detalle: "Transmitiendo PDF y XML al destinatario",
+        pct: 90,
+        label: "Paso 4 de 4",
+      },
+    ];
+
+    const actualizarPaso = (idx) => {
+      const p = pasos[idx];
+      document.getElementById("correoPasoTitulo").textContent = p.titulo;
+      document.getElementById("correoPasoDetalle").textContent = p.detalle;
+      document.getElementById("correoProgressBar").style.width = p.pct + "%";
+      document.getElementById("correoPasoNum").textContent = p.label;
+    };
+
+    // Bloquear cierre mientras se envía
+    $("#modalCorreo").on("hide.bs.modal.sending", function (e) {
+      e.preventDefault();
+    });
+    $("#correoModalHeader .close").hide();
+    $("#correoFormBody, #correoFormFooter").hide();
+    $("#correoProgresoBody").show();
+    actualizarPaso(0);
+
+    const delays = [1400, 2800, 4400];
+    const timers = delays.map((ms, i) =>
+      setTimeout(() => actualizarPaso(i + 1), ms),
+    );
+
+    const restaurarModal = () => {
+      timers.forEach(clearTimeout);
+      document.getElementById("correoProgressBar").style.width = "100%";
+      setTimeout(() => {
+        $("#modalCorreo").off("hide.bs.modal.sending");
+        $("#modalCorreo").modal("hide");
+        // Restaurar estado original para la próxima apertura
+        $("#correoProgresoBody").hide();
+        $("#correoFormBody, #correoFormFooter").show();
+        $("#correoModalHeader .close").show();
+        document.getElementById("correoProgressBar").style.width = "5%";
+      }, 400);
+    };
+    // ── Fin configuración progreso ─────────────────────────────────────────
+
     fetch("../controllers/factura/facturaReenviarCorreoController.php", {
       method: "POST",
       body: formData,
     })
       .then((res) => res.json())
       .then((data) => {
+        restaurarModal();
         if (data.success) {
           swal("¡Enviado!", "La factura fue enviada correctamente.", "success");
         } else {
@@ -170,6 +236,7 @@ $(document).ready(function () {
         $("#modalCorreo").modal("hide");
       })
       .catch(() => {
+        restaurarModal();
         swal("Error", "No se pudo enviar la factura.", "error");
         $("#modalCorreo").modal("hide");
       });

@@ -123,7 +123,7 @@ class SriWebServiceHelper
 
       // Navegar la estructura: Envelope > Body > validarComprobanteResponse > RespuestaRecepcionComprobante
       $respuesta = $dom->Body->validarComprobanteResponse->RespuestaRecepcionComprobante
-                ?? $dom->Body->children()->children();
+        ?? $dom->Body->children()->children();
 
       $estado = '';
       // Intentar extraer el estado directamente
@@ -213,12 +213,12 @@ class SriWebServiceHelper
       // Convertir ISO 8601 (2026-06-07T23:21:36-05:00) a formato MySQL (2026-06-07 23:21:36)
       $fechaAutorizacion = null;
       if ($fechaAutorizacionRaw) {
-          try {
-              $dtAuth = new DateTime($fechaAutorizacionRaw);
-              $fechaAutorizacion = $dtAuth->format('Y-m-d H:i:s');
-          } catch (Exception $eDate) {
-              $fechaAutorizacion = substr(str_replace('T', ' ', $fechaAutorizacionRaw), 0, 19);
-          }
+        try {
+          $dtAuth = new DateTime($fechaAutorizacionRaw);
+          $fechaAutorizacion = $dtAuth->format('Y-m-d H:i:s');
+        } catch (Exception $eDate) {
+          $fechaAutorizacion = substr(str_replace('T', ' ', $fechaAutorizacionRaw), 0, 19);
+        }
       }
 
       // Extraer XML autorizado (comprobante dentro de la respuesta de autorización)

@@ -322,6 +322,26 @@
     </div>
   </div>
 
+  <!-- Modal progreso SRI -->
+  <div class="modal fade" id="modalSriProceso" tabindex="-1" role="dialog"
+    data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-sm" role="document" style="margin-top:15%;">
+      <div class="modal-content" style="border-radius:8px;border:none;box-shadow:0 6px 24px rgba(0,0,0,.25);">
+        <div class="modal-body" style="padding:28px 24px 20px;text-align:center;">
+          <i class="fa fa-cog fa-spin fa-3x" style="color:#3498db;margin-bottom:14px;"></i>
+          <h4 style="margin:0 0 6px;font-size:15px;color:#2c3e50;" id="sriPasoTitulo">Registrando venta...</h4>
+          <p style="font-size:12px;color:#888;margin-bottom:16px;" id="sriPasoDetalle">Por favor espere</p>
+          <div class="progress" style="margin-bottom:6px;height:10px;border-radius:5px;">
+            <div class="progress-bar progress-bar-striped active" id="sriProgressBar"
+              role="progressbar" style="width:5%;border-radius:5px;transition:width .6s ease;">
+            </div>
+          </div>
+          <small style="color:#aaa;" id="sriPasoNum">Paso 1 de 5</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <?php require_once '../templates/footer.php'; ?>
   <script src="../code/qz-tray.js"></script>
   <script src="../code/venta.js"></script>

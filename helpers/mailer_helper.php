@@ -6,7 +6,7 @@ use PHPMailer\PHPMailer\Exception;
 require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../config/empresa.php';
 
-function enviarFacturaPorCorreo($destinatario, $pdfString, $nombreArchivo = 'factura.pdf', $datosFactura = [])
+function enviarFacturaPorCorreo($destinatario, $pdfString, $nombreArchivo = 'factura.pdf', $datosFactura = [], $xmlString = null)
 {
   $config = require __DIR__ . '/../config/mailer.php';
   $mail = new PHPMailer(true);
@@ -58,7 +58,11 @@ function enviarFacturaPorCorreo($destinatario, $pdfString, $nombreArchivo = 'fac
         </div>
       </div>
     </div>';
-    $mail->addStringAttachment($pdfString, $nombreArchivo);
+    $mail->addStringAttachment($pdfString, $nombreArchivo, 'base64', 'application/pdf');
+    if (!empty($xmlString)) {
+      $xmlFilename = preg_replace('/\.pdf$/i', '.xml', $nombreArchivo);
+      $mail->addStringAttachment($xmlString, $xmlFilename, 'base64', 'application/xml');
+    }
     $mail->send();
     return true;
   } catch (Exception $e) {

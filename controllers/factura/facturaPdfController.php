@@ -23,9 +23,10 @@ if (empty($detallesFactura)) {
 
 // Verificar si tiene facturación electrónica
 require_once '../../config/db.php';
-$sqlFE = "SELECT fe_clave_acceso, fe_numero_autorizacion, fe_fecha_autorizacion, fe_estado_sri
-          FROM tbl_factura_electronica 
-          WHERE factura_id = :factura_id 
+$sqlFE = "SELECT fe_clave_acceso, fe_numero_autorizacion, fe_fecha_autorizacion, fe_estado_sri,
+                 fe_xml_autorizado, fe_xml_firmado
+          FROM tbl_factura_electronica
+          WHERE factura_id = :factura_id
           LIMIT 1";
 $queryFE = Db::dbConnection()->prepare($sqlFE);
 $queryFE->bindParam(":factura_id", $factura_id, PDO::PARAM_INT);
@@ -233,16 +234,25 @@ $nombreArchivo = preg_replace('/[^A-Za-z0-9\-]/', '', $facturaComprobante) . '.p
 $pdfString = $pdf->Output('S', $nombreArchivo);
 ob_end_clean(); // Limpia el buffer de salida
 
+
+// Enviar correo solo si se recibe ?enviar=1 Y la factura electrónica está AUTORIZADA por el SRI
+$sriAutorizado = isset($facturaElectronica['fe_estado_sri']) && $facturaElectronica['fe_estado_sri'] === 'AUTORIZADO';
+
 // Solo enviar el PDF al correo si se recibe ?enviar=1
 
-if (isset($_GET['enviar']) && $_GET['enviar'] == '1' && !empty($clienteEmail)) {
+if (isset($_GET['enviar']) && $_GET['enviar'] == '1' && !empty($clienteEmail) && $sriAutorizado) {
   $datosFactura = [
     'numero' => str_pad($facturaComprobante, 9, '0', STR_PAD_LEFT),
     'fecha' => $facturaFecha,
     'monto' => number_format($facturaTotal, 2),
     'cliente' => $clienteNombres
   ];
-  enviarFacturaPorCorreo($clienteEmail, $pdfString, $nombreArchivo, $datosFactura);
+  $xmlRaw = $facturaElectronica['fe_xml_autorizado'] ?? '';
+  if ($xmlRaw && strpos($xmlRaw, '&lt;') !== false) {
+    $xmlRaw = html_entity_decode($xmlRaw, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+  }
+  $xmlParaEmail = $xmlRaw ?: null;
+  enviarFacturaPorCorreo($clienteEmail, $pdfString, $nombreArchivo, $datosFactura, $xmlParaEmail);
 }
 
 
