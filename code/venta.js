@@ -512,6 +512,23 @@ const app = new (function () {
                 }
               }
 
+              if (document.getElementById("imprimirTicketCheckbox").checked) {
+                fetch(
+                  `../controllers/factura/facturaTicketDataController.php?factura_id=${data.factura_id}`,
+                )
+                  .then((res) => res.json())
+                  .then((ticketData) => {
+                    if (ticketData && ticketData.ticket_escpos) {
+                      printTicketQZ(ticketData.ticket_escpos);
+                    } else {
+                      console.error("No se recibió ticket_escpos:", ticketData);
+                    }
+                  })
+                  .catch((err) => {
+                    console.error("Error al obtener el ticket:", err);
+                  });
+              }
+
               swal(mensaje, { icon: icono }).then(() => {
                 const facturaId = data.factura_id;
                 window.open(
@@ -540,96 +557,6 @@ const app = new (function () {
               "error",
             );
           });
-    // if (form.get("cliente") !== null) {
-    //   if (form.get("comprobante") !== null) {
-    //     fetch("../controllers/factura/facturaGuardarController.php", {
-    //       method: "POST",
-    //       body: form,
-    //     })
-    //       .then((res) => res.json())
-    //       .then((data) => {
-    //         this.totalFactura.value = "0.00";
-    //         if (data === 1 || data.status === 1) {
-    //           // El ticket se imprime automáticamente desde PHP si checkbox está marcado
-
-    //           // Verificar si se generó factura electrónica
-    //           let mensaje = "Factura registrada!!";
-    //           if (data.factura_electronica) {
-    //             const fe = data.factura_electronica;
-    //             if (fe.autorizado) {
-    //               mensaje =
-    //                 "¡Factura electrónica AUTORIZADA por el SRI!\n\nClave de acceso: " +
-    //                 fe.clave_acceso.substring(0, 20) +
-    //                 "...";
-    //             } else if (
-    //               fe.estado_sri === "EN_PROCESO" ||
-    //               fe.estado_sri === "PENDIENTE"
-    //             ) {
-    //               mensaje =
-    //                 "Factura guardada. El SRI está procesando el comprobante.\n" +
-    //                 "Estado: " +
-    //                 fe.estado_sri +
-    //                 "\nPuede verificar más tarde.";
-    //             } else {
-    //               mensaje =
-    //                 "Factura guardada. " +
-    //                 (fe.mensaje ||
-    //                   "Error al autorizar en el SRI. Estado: " +
-    //                     (fe.estado_sri || "ERROR"));
-    //             }
-    //           }
-
-    //           swal(mensaje, {
-    //             // // Impresión automática con QZ Tray si el checkbox está marcado
-    //             // if (document.getElementById("imprimirTicketCheckbox").checked) {
-    //             //   fetch(
-    //             //     `../controllers/factura/facturaTicketDataController.php?factura_id=${data.factura_id}`,
-    //             //   )
-    //             //     .then((res) => res.json())
-    //             //     .then((ticketData) => {
-    //             //       if (ticketData && ticketData.ticket_escpos) {
-    //             //         printTicketQZ(ticketData.ticket_escpos);
-    //             //       } else {
-    //             //         console.error("No se recibió ticket_escpos:", ticketData);
-    //             //       }
-    //             //     })
-    //             //     .catch((err) => {
-    //             //       console.error("Error al obtener el ticket:", err);
-    //             //     });
-    //             // }
-    //             // swal("Factura registrada!!", {
-    //             icon: "success",
-    //           }).then(() => {
-    //             // Abrir la factura en una nueva ventana
-    //             const facturaId = data.factura_id;
-    //             window.open(
-    //               "../controllers/factura/facturaPdfController.php?factura_id=" +
-    //                 facturaId +
-    //                 "&enviar=1",
-    //               "_blank",
-    //             );
-    //           });
-    //           this.limpiar_factura();
-    //           this.listadoDetalles();
-    //           this.mostrarSerieFactura();
-    //           this.cargarImpuestoActivo(); // Recargar impuesto después de la venta
-    //         } else if (data === 2 || data.status === 2) {
-    //           swal("Numero de factura ya existe!!", {
-    //             icon: "error",
-    //           });
-    //           this.numeroFactura.focus();
-    //           this.calcularTotal();
-    //         }
-    //       })
-    //       .catch((err) => console.log(err));
-    //   } else {
-    //     swal("Atención!", "Seleccione un comprobante", "warning");
-    //     return;
-    //   }
-    // } else {
-    //   swal("Atención!", "Seleccione un cliente", "warning");
-    //   return;
-    // }
   };
 
   // Función global para impresión QZ Tray
@@ -733,38 +660,6 @@ const app = new (function () {
       .catch((err) => {
         this.impuestoFactura.value = 0;
         this.impuestoFactura.placeholder = "Error al cargar impuesto";
-      });
-  };
-
-  this.imprimirTicketDirecto = (facturaId) => {
-    // Obtener datos de la factura
-    fetch(
-      `../controllers/factura/facturaTicketDataController.php?factura_id=${facturaId}`,
-    )
-      .then((res) => res.json())
-      .then((ticketData) => {
-        if (ticketData.factura && ticketData.detalles) {
-          // Usar el conector del plugin
-          ConectorPluginV3.imprimirTicket(
-            ticketData.factura,
-            ticketData.detalles,
-            ticketData.cliente,
-          )
-            .then((resultado) => {
-              console.log("✓ Ticket enviado a imprimir", resultado);
-            })
-            .catch((err) => {
-              console.error("⚠ Error al imprimir:", err);
-              swal(
-                "Advertencia",
-                "No se pudo imprimir el ticket. Verifica que el plugin esté corriendo en http://localhost:8000",
-                "warning",
-              );
-            });
-        }
-      })
-      .catch((err) => {
-        console.error("Error al obtener datos:", err);
       });
   };
 })();
