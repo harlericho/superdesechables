@@ -7,7 +7,7 @@ class FacturaModel
   {
     try {
       $sql = "SELECT f.factura_id, f.factura_num_comprobante, f.factura_fecha, f.factura_impuesto, 
-                     f.factura_subtotal, f.factura_total, f.factura_estado,
+                     f.factura_subtotal, f.factura_total, f.factura_estado,f.factura_descuento_global,
                      c.cliente_dni, c.cliente_nombres, c.cliente_apellidos, c.cliente_email,
                      u.usuario_nombres, u.usuario_email,
                      t.tipo_comp_descripcion,
@@ -31,7 +31,7 @@ class FacturaModel
   {
     try {
       $sql = "SELECT f.factura_id, f.factura_num_comprobante, f.factura_fecha, f.factura_impuesto, 
-                     f.factura_subtotal, f.factura_total, f.factura_estado,
+                     f.factura_subtotal, f.factura_total, f.factura_estado,f.factura_descuento_global,
                      c.cliente_dni, c.cliente_nombres, c.cliente_apellidos, c.cliente_email,
                      u.usuario_nombres, u.usuario_email,
                      t.tipo_comp_descripcion,

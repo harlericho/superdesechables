@@ -4,6 +4,77 @@ require_once __DIR__ . '/../assets/fpdf/fpdf.php';
 require_once __DIR__ . '/../config/empresa.php';
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../models/facturacionElectronicaModel.php';
+require_once __DIR__ . '/facturacion_electronica_helper.php';
+
+// FPDF no expone el número de líneas que ocupará un MultiCell. Se necesita para
+// que las celdas vecinas (código, cantidad, precios) tengan la misma altura que
+// la descripción cuando esta se envuelve en 2+ líneas; si no, la siguiente fila
+// de la tabla se dibuja encima del texto todavía visible de la fila anterior.
+class FacturaPdfDocument extends FPDF
+{
+  function NbLines($w, $txt)
+  {
+    $cw = $this->CurrentFont['cw'];
+    if ($w == 0) {
+      $w = $this->w - $this->rMargin - $this->x;
+    }
+    $wmax = ($w - 2 * $this->cMargin) * 1000 / $this->FontSize;
+    $s = str_replace("\r", '', $txt);
+    $nb = strlen($s);
+    if ($nb > 0 && $s[$nb - 1] == "\n") {
+      $nb--;
+    }
+    $sep = -1;
+    $i = 0;
+    $j = 0;
+    $l = 0;
+    $nl = 1;
+    while ($i < $nb) {
+      $c = $s[$i];
+      if ($c == "\n") {
+        $i++;
+        $sep = -1;
+        $j = $i;
+        $l = 0;
+        $nl++;
+        continue;
+      }
+      if ($c == ' ') {
+        $sep = $i;
+      }
+      $l += $cw[$c] ?? 0;
+      if ($l > $wmax) {
+        if ($sep == -1) {
+          if ($i == $j) {
+            $i++;
+          }
+        } else {
+          $i = $sep + 1;
+        }
+        $sep = -1;
+        $j = $i;
+        $l = 0;
+        $nl++;
+      } else {
+        $i++;
+      }
+    }
+    return $nl;
+  }
+}
+
+// Reduce el tamaño de fuente hasta que el texto quepa en el ancho dado, para que
+// valores largos (emails, direcciones) no se salgan de su recuadro en el PDF.
+function facturaPdfFitFontSize($pdf, $texto, $maxWidth, $sizeInicial, $sizeMinimo = 5)
+{
+  $size = $sizeInicial;
+  $pdf->SetFont('Arial', '', $size);
+  while ($size > $sizeMinimo && $pdf->GetStringWidth($texto) > $maxWidth) {
+    $size -= 0.5;
+    $pdf->SetFont('Arial', '', $size);
+  }
+  return $size;
+}
 
 // Obtiene los datos de facturación electrónica (autorización SRI, claves, valores) de una factura.
 function facturaPdfObtenerFE($factura_id)
@@ -33,6 +104,7 @@ function facturaPdfObtenerEmpresaInfo()
       'direccion_sucursal' => $config['config_fe_direccion_sucursal'] ?? null,
       'obligado_contabilidad' => $config['config_fe_obligado_contabilidad'] ?? null,
       'ambiente' => $config['config_fe_ambiente'] ?? null,
+      'contribuyente_rimpe' => $config['config_fe_contribuyente_rimpe'] ?? 'NO',
     ];
   }
   return [
@@ -42,6 +114,7 @@ function facturaPdfObtenerEmpresaInfo()
     'direccion_sucursal' => null,
     'obligado_contabilidad' => null,
     'ambiente' => null,
+    'contribuyente_rimpe' => 'NO',
   ];
 }
 
@@ -88,8 +161,9 @@ function facturaPdfLV($pdf, $label, $valor, $wLabel, $wValor, $h = 5, $sizeLabel
 {
   $pdf->SetFont('Arial', 'B', $sizeLabel);
   $pdf->Cell($wLabel, $h, utf8_decode($label), 0, 0, 'L');
-  $pdf->SetFont('Arial', '', $sizeValor);
-  $pdf->Cell($wValor, $h, utf8_decode((string)($valor ?? '')), 0, $ln, $alignValor);
+  $texto = utf8_decode((string)($valor ?? ''));
+  facturaPdfFitFontSize($pdf, $texto, $wValor - 1, $sizeValor, 5);
+  $pdf->Cell($wValor, $h, $texto, 0, $ln, $alignValor);
 }
 
 /**
@@ -116,7 +190,7 @@ function construirFacturaPdf(array $detallesFactura, ?array $facturaElectronica)
   $empresa = facturaPdfObtenerEmpresaInfo();
   $tieneFE = $facturaElectronica && !empty($facturaElectronica['fe_clave_acceso']);
 
-  $pdf = new FPDF('P', 'mm', 'A4');
+  $pdf = new FacturaPdfDocument('P', 'mm', 'A4');
   $pdf->AddPage();
   $pdf->SetMargins(10, 8, 10);
 
@@ -203,6 +277,12 @@ function construirFacturaPdf(array $detallesFactura, ?array $facturaElectronica)
   } else {
     facturaPdfLV($pdf, 'Email: ', Empresa::getEmailClientes(), 16, $wIzq - 20, 4, 7, 7, 1);
   }
+  $textoRimpe = FacturacionElectronicaHelper::textoLeyendaRimpe($empresa['contribuyente_rimpe'] ?? 'NO');
+  if ($textoRimpe !== null) {
+    $pdf->SetX($xIzq + 2);
+    $pdf->SetFont('Arial', 'B', 6.5);
+    $pdf->Cell($wIzq - 4, 4, utf8_decode($textoRimpe), 0, 1, 'C');
+  }
   $alturaEmpresaContenido = ($pdf->GetY() + 2) - $yEmpresa;
   $alturaIzq = $logoHeight + 3 + $alturaEmpresaContenido;
 
@@ -237,11 +317,13 @@ function construirFacturaPdf(array $detallesFactura, ?array $facturaElectronica)
   facturaPdfLV($pdf, 'Teléfono: ', $clienteTelefono, 20, 45, 6, 9, 9, 1);
 
   $pdf->SetX(12);
-  facturaPdfLV($pdf, 'Fecha de Emisión: ', $facturaFecha, 62, 63, 6, 9, 9);
-  facturaPdfLV($pdf, 'Email: ', $clienteEmail, 20, 45, 6, 9, 9, 1);
+  facturaPdfLV($pdf, 'Fecha de Emisión: ', $facturaFecha, 62, 123, 6, 9, 9, 1);
 
   $pdf->SetX(12);
   facturaPdfLV($pdf, 'Dirección: ', $clienteDireccion, 25, 160, 6, 9, 9, 1);
+
+  $pdf->SetX(12);
+  facturaPdfLV($pdf, 'Email: ', $clienteEmail, 25, 160, 6, 9, 9, 1);
 
   $yClienteEnd = $pdf->GetY() + 2;
   $pdf->SetDrawColor(0, 0, 0);
@@ -259,16 +341,32 @@ function construirFacturaPdf(array $detallesFactura, ?array $facturaElectronica)
   $pdf->Cell(25, 8, 'Precio Total', 1, 1, 'C');
   $pdf->SetFont('Arial', '', 10);
   foreach ($detallesFactura as $detalle) {
-    $pdf->Cell(28, 7, $detalle['producto_codigo'], 1, 0, 'C');
-    $pdf->Cell(15, 7, $detalle['detalle_cantidad'], 1, 0, 'C');
-    $x = $pdf->GetX();
-    $y = $pdf->GetY();
-    $pdf->MultiCell(75, 7, utf8_decode($detalle['producto_nombre']), 1, 'L');
-    $pdf->SetXY($x + 75, $y);
-    $pdf->Cell(25, 7, '$ ' . number_format($detalle['detalle_precio_unit'], 2), 1, 0, 'R');
+    $nombreTexto = utf8_decode($detalle['producto_nombre']);
+
+    // La descripción puede envolverse en varias líneas: se calcula cuántas para que
+    // el resto de celdas de la fila (código, cantidad, precios) tengan esa misma
+    // altura y no queden más cortas que la descripción (lo que provocaba que la
+    // siguiente fila se dibujara encima del texto todavía visible de esta).
+    $pdf->SetFont('Arial', '', 10);
+    $numLineas = max(1, $pdf->NbLines(75, $nombreTexto));
+    $alturaFila = $numLineas * 7;
+
+    $xFila = $pdf->GetX();
+    $yFila = $pdf->GetY();
+
+    $pdf->Cell(28, $alturaFila, $detalle['producto_codigo'], 1, 0, 'C');
+    $pdf->Cell(15, $alturaFila, $detalle['detalle_cantidad'], 1, 0, 'C');
+
+    $xDesc = $pdf->GetX();
+    $pdf->MultiCell(75, 7, $nombreTexto, 1, 'L');
+    $pdf->SetXY($xDesc + 75, $yFila);
+
+    $pdf->Cell(25, $alturaFila, '$ ' . number_format($detalle['detalle_precio_unit'], 2), 1, 0, 'R');
     $descuento = $detalle['detalle_descuento'] > 0 ? number_format($detalle['detalle_descuento'], 2) . '%' : '0.00%';
-    $pdf->Cell(22, 7, $descuento, 1, 0, 'R');
-    $pdf->Cell(25, 7, '$ ' . number_format($detalle['detalle_total'], 2), 1, 1, 'R');
+    $pdf->Cell(22, $alturaFila, $descuento, 1, 0, 'R');
+    $pdf->Cell(25, $alturaFila, '$ ' . number_format($detalle['detalle_total'], 2), 1, 0, 'R');
+
+    $pdf->SetXY($xFila, $yFila + $alturaFila);
   }
 
   $pdf->Ln(3);

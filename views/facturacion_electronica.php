@@ -118,12 +118,14 @@
 
                     <div class="col-md-3">
                       <div class="form-group">
-                        <label>Contribuyente RIMPE</label>
+                        <label>Régimen RIMPE</label>
                         <select class="form-control" id="config_fe_contribuyente_rimpe"
                           name="config_fe_contribuyente_rimpe">
-                          <option value="NO">NO</option>
-                          <option value="SI">SI</option>
+                          <option value="NO">No aplica</option>
+                          <option value="NEGOCIO_POPULAR">RIMPE - Negocio Popular</option>
+                          <option value="EMPRENDEDOR">RIMPE - Emprendedor</option>
                         </select>
+                        <small class="text-muted">Verifícalo en la Consulta RUC del portal del SRI (campo "Régimen"). Define el texto legal que se imprime en factura y XML.</small>
                       </div>
                     </div>
                   </div>

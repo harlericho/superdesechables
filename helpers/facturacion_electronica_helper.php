@@ -89,6 +89,14 @@ class FacturacionElectronicaHelper
     $infoTributaria->addChild('secuencial', $datosFactura['fe_secuencial']);
     $infoTributaria->addChild('dirMatriz', htmlspecialchars($configuracion['config_fe_direccion_matriz'], ENT_XML1, 'UTF-8'));
 
+    // Contribuyentes bajo el Régimen RIMPE deben declararlo también en el XML (no solo impreso).
+    // El texto legal exigido por el SRI difiere según la categoría (Negocio Popular vs. Emprendedor).
+    $textoRimpe = self::textoLeyendaRimpe($configuracion['config_fe_contribuyente_rimpe'] ?? 'NO');
+    if ($textoRimpe !== null) {
+      $infoTributaria->addChild('contribuyenteRimpe', htmlspecialchars($textoRimpe, ENT_XML1, 'UTF-8'));
+    }
+
+
     // Información de la factura
     $infoFactura = $xml->addChild('infoFactura');
     $infoFactura->addChild('fechaEmision', date('d/m/Y', strtotime($datosFactura['factura_fecha'])));
@@ -299,30 +307,30 @@ class FacturacionElectronicaHelper
       //    incluye xmlns:ds → los SHA1 no coincidían → "firma alterada".
       //    Construyendo el string manualmente obtenemos exactamente lo que Java produce.
       $siC14n =
-          '<ds:SignedInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#">'
-          . '<ds:CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#">'
-          . '</ds:CanonicalizationMethod>'
-          . '<ds:SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1">'
-          . '</ds:SignatureMethod>'
-          . '<ds:Reference URI="#comprobante">'
-          . '<ds:Transforms>'
-          . '<ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature">'
-          . '</ds:Transform>'
-          . '</ds:Transforms>'
-          . '<ds:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1">'
-          . '</ds:DigestMethod>'
-          . '<ds:DigestValue>' . $facturaDigest . '</ds:DigestValue>'
-          . '</ds:Reference>'
-          . '<ds:Reference Type="http://uri.etsi.org/01903#SignedProperties" URI="#' . $signedPropsId . '">'
-          . '<ds:Transforms>'
-          . '<ds:Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#">'
-          . '</ds:Transform>'
-          . '</ds:Transforms>'
-          . '<ds:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1">'
-          . '</ds:DigestMethod>'
-          . '<ds:DigestValue>' . $spDigest . '</ds:DigestValue>'
-          . '</ds:Reference>'
-          . '</ds:SignedInfo>';
+        '<ds:SignedInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#">'
+        . '<ds:CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#">'
+        . '</ds:CanonicalizationMethod>'
+        . '<ds:SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1">'
+        . '</ds:SignatureMethod>'
+        . '<ds:Reference URI="#comprobante">'
+        . '<ds:Transforms>'
+        . '<ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature">'
+        . '</ds:Transform>'
+        . '</ds:Transforms>'
+        . '<ds:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1">'
+        . '</ds:DigestMethod>'
+        . '<ds:DigestValue>' . $facturaDigest . '</ds:DigestValue>'
+        . '</ds:Reference>'
+        . '<ds:Reference Type="http://uri.etsi.org/01903#SignedProperties" URI="#' . $signedPropsId . '">'
+        . '<ds:Transforms>'
+        . '<ds:Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#">'
+        . '</ds:Transform>'
+        . '</ds:Transforms>'
+        . '<ds:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1">'
+        . '</ds:DigestMethod>'
+        . '<ds:DigestValue>' . $spDigest . '</ds:DigestValue>'
+        . '</ds:Reference>'
+        . '</ds:SignedInfo>';
 
       // 7. Firmar el C14N construido manualmente con RSA-SHA1
       $privKey = openssl_pkey_get_private($certs['pkey']);
@@ -422,7 +430,6 @@ class FacturacionElectronicaHelper
 
       // 11. Serializar UNA SOLA VEZ. Este es el XML exacto que se envía al SRI.
       return $doc->saveXML();
-
     } catch (Exception $e) {
       error_log('Error al firmar XML (XAdES-BES): ' . $e->getMessage());
       return false;
@@ -509,6 +516,27 @@ class FacturacionElectronicaHelper
 
     return ['valido' => true];
   }
+
+
+  /**
+   * Leyenda legal exigida por el SRI según la categoría RIMPE del contribuyente.
+   * Se usa tanto en el XML (contribuyenteRimpe) como en el PDF y el ticket.
+   *
+   * @param string $categoriaRimpe 'NO' | 'NEGOCIO_POPULAR' | 'EMPRENDEDOR'
+   * @return string|null Texto a imprimir, o null si no aplica RIMPE
+   */
+  public static function textoLeyendaRimpe($categoriaRimpe)
+  {
+    switch ($categoriaRimpe) {
+      case 'NEGOCIO_POPULAR':
+        return 'CONTRIBUYENTE NEGOCIO POPULAR - RÉGIMEN RIMPE';
+      case 'EMPRENDEDOR':
+        return 'CONTRIBUYENTE RÉGIMEN RIMPE';
+      default:
+        return null;
+    }
+  }
+
 
   /**
    * Formatear número de comprobante: 001-001-000000001

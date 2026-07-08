@@ -33,9 +33,14 @@ try {
     exit;
   }
 
+  // Este formulario (Tab "Datos del Emisor") no incluye los campos de certificado ni el
+  // interruptor de activación (viven en otras pestañas/formularios). Se parte de la
+  // configuración ya guardada para no pisarlos con valores en blanco/0 en cada guardado.
+  $configActual = FacturacionElectronicaModel::obtenerConfiguracion() ?: [];
+
   // Preparar datos
   $data = [
-    'config_fe_id' => $_POST['config_fe_id'] ?? 1,
+    'config_fe_id' => $_POST['config_fe_id'] ?? ($configActual['config_fe_id'] ?? 1),
     'config_fe_ruc' => $_POST['config_fe_ruc'],
     'config_fe_razon_social' => $_POST['config_fe_razon_social'],
     'config_fe_nombre_comercial' => $_POST['config_fe_nombre_comercial'] ?? '',
@@ -45,14 +50,14 @@ try {
     'config_fe_regimen_microempresa' => $_POST['config_fe_regimen_microempresa'] ?? 'NO',
     'config_fe_agente_retencion' => $_POST['config_fe_agente_retencion'] ?? 'NO',
     'config_fe_contribuyente_rimpe' => $_POST['config_fe_contribuyente_rimpe'] ?? 'NO',
-    'config_fe_certificado_password' => '',
-    'config_fe_certificado_fecha_caducidad' => $_POST['config_fe_certificado_fecha_caducidad'] ?? null,
-    'config_fe_ambiente' => $_POST['config_fe_ambiente'] ?? 'PRUEBAS',
-    'config_fe_tipo_emision' => $_POST['config_fe_tipo_emision'] ?? 'NORMAL',
-    'config_fe_email_envio' => $_POST['config_fe_email_envio'] ?? '',
-    'config_fe_email_copia' => $_POST['config_fe_email_copia'] ?? '',
-    'config_fe_enviar_email_automatico' => isset($_POST['config_fe_enviar_email_automatico']) ? 1 : 0,
-    'config_fe_activo' => isset($_POST['config_fe_activo']) ? 1 : 0
+    'config_fe_certificado_password' => $configActual['config_fe_certificado_password'] ?? '',
+    'config_fe_certificado_fecha_caducidad' => $configActual['config_fe_certificado_fecha_caducidad'] ?? null,
+    'config_fe_ambiente' => $_POST['config_fe_ambiente'] ?? ($configActual['config_fe_ambiente'] ?? 'PRUEBAS'),
+    'config_fe_tipo_emision' => $_POST['config_fe_tipo_emision'] ?? ($configActual['config_fe_tipo_emision'] ?? 'NORMAL'),
+    'config_fe_email_envio' => $_POST['config_fe_email_envio'] ?? ($configActual['config_fe_email_envio'] ?? ''),
+    'config_fe_email_copia' => $_POST['config_fe_email_copia'] ?? ($configActual['config_fe_email_copia'] ?? ''),
+    'config_fe_enviar_email_automatico' => isset($_POST['config_fe_enviar_email_automatico']) ? 1 : ($configActual['config_fe_enviar_email_automatico'] ?? 0),
+    'config_fe_activo' => $configActual['config_fe_activo'] ?? 0
   ];
 
   // Guardar

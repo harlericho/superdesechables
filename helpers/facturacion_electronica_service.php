@@ -105,13 +105,13 @@ class FacturacionElectronicaService
         'fe_cliente_direccion' => $factura['cliente_direccion'] ?: 'S/N',
         'fe_cliente_email' => $factura['cliente_email'],
         'fe_cliente_telefono' => $factura['cliente_telefono'],
-        'fe_subtotal_sin_impuestos' => $factura['factura_subtotal'],
-        'fe_subtotal_iva0' => 0,
-        'fe_subtotal_iva' => $factura['factura_subtotal'],
-        'fe_iva_valor' => ($factura['factura_subtotal'] * $factura['factura_impuesto']) / 100,
-        'fe_descuento_total' => 0,
-        'fe_propina' => 0,
-        'fe_total_comprobante' => $factura['factura_total'],
+        'fe_subtotal_sin_impuestos' => $datosFactura['fe_subtotal_sin_impuestos'],
+        'fe_subtotal_iva0' => $datosFactura['fe_subtotal_iva0'],
+        'fe_subtotal_iva' => $datosFactura['fe_subtotal_iva'],
+        'fe_iva_valor' => $datosFactura['fe_iva_valor'],
+        'fe_descuento_total' => $datosFactura['fe_descuento_total'],
+        'fe_propina' => $datosFactura['fe_propina'],
+        'fe_total_comprobante' => $datosFactura['fe_total_comprobante'],
         'fe_xml_generado' => $xml,
         'fe_ambiente' => $config['config_fe_ambiente'],
         'fe_tipo_emision' => $config['config_fe_tipo_emision'],
@@ -259,15 +259,16 @@ class FacturacionElectronicaService
     $subtotalIVA0 = 0;
     $subtotalIVA = 0;
     $ivaValor = 0;
+    $descuentoTotalAcumulado = 0;
 
     // Por ahora asumimos que todo tiene IVA (según configuración)
     $porcentajeIVA = floatval($factura['factura_impuesto']);
 
-    if ($porcentajeIVA > 0) {
-      $subtotalIVA = floatval($factura['factura_subtotal']);
-      $ivaValor = ($subtotalIVA * $porcentajeIVA) / 100;
-    } else {
-      $subtotalIVA0 = floatval($factura['factura_subtotal']);
+    // Descuento global de la factura (si existe) para prorratearlo entre los detalles
+    $descuentoGlobal = floatval($factura['factura_descuento_global'] ?? 0);
+    $subtotalBrutoDetalles = 0;
+    foreach ($detalles as $detalle) {
+      $subtotalBrutoDetalles += floatval($detalle['detalle_cantidad']) * floatval($detalle['detalle_precio_unit']);
     }
 
     $datosFactura = [
@@ -279,13 +280,7 @@ class FacturacionElectronicaService
       'fe_cliente_tipo_identificacion' => FacturacionElectronicaHelper::obtenerTipoIdentificacion($factura['cliente_dni']),
       'fe_cliente_razon_social' => trim($factura['cliente_nombres'] . ' ' . $factura['cliente_apellidos']),
       'fe_cliente_direccion' => $factura['cliente_direccion'] ?: 'S/N',
-      'fe_subtotal_sin_impuestos' => $factura['factura_subtotal'],
-      'fe_subtotal_iva0' => $subtotalIVA0,
-      'fe_subtotal_iva' => $subtotalIVA,
-      'fe_iva_valor' => $ivaValor,
-      'fe_descuento_total' => 0,
       'fe_propina' => 0,
-      'fe_total_comprobante' => $factura['factura_total'],
       'detalles' => [],
       'informacion_adicional' => []
     ];
@@ -300,7 +295,25 @@ class FacturacionElectronicaService
 
     // Procesar detalles
     foreach ($detalles as $detalle) {
-      $precioSinImpuesto = floatval($detalle['detalle_total']);
+      $cantidad = floatval($detalle['detalle_cantidad']);
+      $precioUnit = floatval($detalle['detalle_precio_unit']);
+      $subtotalLinea = $cantidad * $precioUnit;
+
+      // detalle_total ya viene neto del descuento por producto (detalle_descuento es un %,
+      // no un valor monetario). Se calcula el descuento en dólares por diferencia para que
+      // SIEMPRE cuadre con la regla del SRI: precioTotalSinImpuesto = cantidad*precioUnitario - descuento
+      $precioNetoProducto = floatval($detalle['detalle_total']);
+      $descuentoProducto = max(0, $subtotalLinea - $precioNetoProducto);
+
+      // Prorratear el descuento global de la factura según el peso de esta línea
+      $descuentoGlobalLinea = 0;
+      if ($descuentoGlobal > 0 && $subtotalBrutoDetalles > 0) {
+        $descuentoGlobalLinea = $descuentoGlobal * ($subtotalLinea / $subtotalBrutoDetalles);
+      }
+
+      $descuentoLinea = round($descuentoProducto + $descuentoGlobalLinea, 2);
+      $precioSinImpuesto = round($subtotalLinea - $descuentoLinea, 2);
+
       $tarifaIVA = $porcentajeIVA;
       $codigoPorcentaje = '0'; // 0%
 
@@ -313,20 +326,35 @@ class FacturacionElectronicaService
         $codigoPorcentaje = '2'; // 12%
       }
 
-      $valorIVA = ($precioSinImpuesto * $tarifaIVA) / 100;
+      $valorIVA = round(($precioSinImpuesto * $tarifaIVA) / 100, 2);
+
+      if ($tarifaIVA > 0) {
+        $subtotalIVA += $precioSinImpuesto;
+        $ivaValor += $valorIVA;
+      } else {
+        $subtotalIVA0 += $precioSinImpuesto;
+      }
+      $descuentoTotalAcumulado += $descuentoLinea;
 
       $datosFactura['detalles'][] = [
         'producto_codigo' => $detalle['producto_codigo'] ?? 'PROD',
         'producto_nombre' => $detalle['producto_nombre'],
         'detalle_cantidad' => $detalle['detalle_cantidad'],
         'detalle_precio_unit' => $detalle['detalle_precio_unit'],
-        'detalle_descuento' => $detalle['detalle_descuento'] ?? 0,
+        'detalle_descuento' => $descuentoLinea,
         'precio_sin_impuesto' => $precioSinImpuesto,
         'codigo_porcentaje_iva' => $codigoPorcentaje,
         'tarifa_iva' => $tarifaIVA,
         'valor_iva' => $valorIVA
       ];
     }
+
+    $datosFactura['fe_subtotal_sin_impuestos'] = round($subtotalIVA + $subtotalIVA0, 2);
+    $datosFactura['fe_subtotal_iva0'] = round($subtotalIVA0, 2);
+    $datosFactura['fe_subtotal_iva'] = round($subtotalIVA, 2);
+    $datosFactura['fe_iva_valor'] = round($ivaValor, 2);
+    $datosFactura['fe_descuento_total'] = round($descuentoTotalAcumulado, 2);
+    $datosFactura['fe_total_comprobante'] = round($subtotalIVA + $subtotalIVA0 + $ivaValor + $datosFactura['fe_propina'], 2);
 
     return $datosFactura;
   }
