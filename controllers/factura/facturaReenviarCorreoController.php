@@ -3,9 +3,10 @@
 header('Content-Type: application/json');
 
 require_once '../../models/detalleModel.php';
-require_once '../../assets/fpdf/fpdf.php';
+// require_once '../../assets/fpdf/fpdf.php';
 require_once '../../config/empresa.php';
 require_once '../../helpers/mailer_helper.php';
+require_once '../../helpers/factura_pdf_helper.php';
 
 $factura_id = $_POST['factura_id'] ?? null;
 $correo = $_POST['correo'] ?? null;
@@ -21,216 +22,227 @@ if (empty($detallesFactura)) {
   exit;
 }
 
-$primerDetalle = $detallesFactura[0];
-$clienteNombres = $primerDetalle['cliente_nombres'] . " " . $primerDetalle['cliente_apellidos'];
-$clienteDni = $primerDetalle['cliente_dni'];
-$clienteEmail = $primerDetalle['cliente_email'];
-$clienteDireccion = $primerDetalle['cliente_direccion'];
-$clienteTelefono = $primerDetalle['cliente_telefono'];
-$facturaComprobante = $primerDetalle['factura_num_comprobante'];
-$facturaFecha = $primerDetalle['factura_fecha'];
-$usuarioNombres = $primerDetalle['usuario_nombres'];
-$usuarioEmail = $primerDetalle['usuario_email'];
-$facturaSubTotal = $primerDetalle['factura_subtotal'];
-$facturaImpuesto = $primerDetalle['factura_impuesto'];
-$facturaTotal = $primerDetalle['factura_total'];
-$facturaDescuentoValor = isset($primerDetalle['factura_descuento_global']) ? $primerDetalle['factura_descuento_global'] : 0;
-$facturaDescuentoPorcentaje = isset($primerDetalle['factura_descuento_global_porcentaje']) ? $primerDetalle['factura_descuento_global_porcentaje'] : 0;
+
+$facturaComprobante = $detallesFactura[0]['factura_num_comprobante'];
+$facturaFecha = $detallesFactura[0]['factura_fecha'];
+$facturaTotal = $detallesFactura[0]['factura_total'];
+$clienteNombres = $detallesFactura[0]['cliente_nombres'] . " " . $detallesFactura[0]['cliente_apellidos'];
 
 // Datos de factura electrónica (necesarios antes de generar el PDF)
-require_once '../../config/db.php';
-$qFE = Db::dbConnection()->prepare(
-  "SELECT fe_clave_acceso, fe_numero_autorizacion, fe_fecha_autorizacion,
-          fe_estado_sri, fe_xml_autorizado
-   FROM tbl_factura_electronica WHERE factura_id = ? LIMIT 1"
-);
-$qFE->execute([$factura_id]);
-$facturaElectronica = $qFE->fetch(PDO::FETCH_ASSOC) ?: null;
+$facturaElectronica = facturaPdfObtenerFE($factura_id);
 
-// Inicia el PDF
-$pdf = new FPDF('P', 'mm', 'A4');
-$pdf->AddPage();
-$pdf->SetFont('Arial', 'B', 14);
+$pdf = construirFacturaPdf($detallesFactura, $facturaElectronica);
 
-// Logo y Nombre de Empresa
+// $primerDetalle = $detallesFactura[0];
+// $clienteNombres = $primerDetalle['cliente_nombres'] . " " . $primerDetalle['cliente_apellidos'];
+// $clienteDni = $primerDetalle['cliente_dni'];
+// $clienteEmail = $primerDetalle['cliente_email'];
+// $clienteDireccion = $primerDetalle['cliente_direccion'];
+// $clienteTelefono = $primerDetalle['cliente_telefono'];
+// $facturaComprobante = $primerDetalle['factura_num_comprobante'];
+// $facturaFecha = $primerDetalle['factura_fecha'];
+// $usuarioNombres = $primerDetalle['usuario_nombres'];
+// $usuarioEmail = $primerDetalle['usuario_email'];
+// $facturaSubTotal = $primerDetalle['factura_subtotal'];
+// $facturaImpuesto = $primerDetalle['factura_impuesto'];
+// $facturaTotal = $primerDetalle['factura_total'];
+// $facturaDescuentoValor = isset($primerDetalle['factura_descuento_global']) ? $primerDetalle['factura_descuento_global'] : 0;
+// $facturaDescuentoPorcentaje = isset($primerDetalle['factura_descuento_global_porcentaje']) ? $primerDetalle['factura_descuento_global_porcentaje'] : 0;
 
-// --- NUEVO ENCABEZADO ESTILO FACTURA ELECTRÓNICA ---
-$pdf->Image('../../assets/image/' . Empresa::getLogoEmpresa(), 10, 10, 45); // Logo más grande
-$pdf->SetFont('Arial', 'B', 13);
-$pdf->SetXY(60, 10);
-$pdf->Cell(140, 7, utf8_decode(Empresa::getNombre()), 0, 1, 'R');
-$pdf->SetFont('Arial', '', 10);
-$pdf->SetXY(60, 17);
-$pdf->Cell(140, 5, 'R.U.C.:' . Empresa::getRuc(), 0, 1, 'R'); // Ejemplo RUC
+// // Datos de factura electrónica (necesarios antes de generar el PDF)
+// require_once '../../config/db.php';
+// $qFE = Db::dbConnection()->prepare(
+//   "SELECT fe_clave_acceso, fe_numero_autorizacion, fe_fecha_autorizacion,
+//           fe_estado_sri, fe_xml_autorizado
+//    FROM tbl_factura_electronica WHERE factura_id = ? LIMIT 1"
+// );
+// $qFE->execute([$factura_id]);
+// $facturaElectronica = $qFE->fetch(PDO::FETCH_ASSOC) ?: null;
 
-$pdf->SetXY(60, 22);
-$pdf->Cell(140, 5, 'FACTURA', 0, 1, 'R');
+// // Inicia el PDF
+// $pdf = new FPDF('P', 'mm', 'A4');
+// $pdf->AddPage();
+// $pdf->SetFont('Arial', 'B', 14);
 
-// Datos de empresa en negro y alineados a la derecha debajo del bloque derecho
-$pdf->SetFont('Arial', '', 10);
-$pdf->SetXY(60, 27);
-$pdf->Cell(140, 5, 'No.' . str_pad($facturaComprobante, 9, '0', STR_PAD_LEFT), 0, 1, 'R');
-$pdf->SetXY(60, 34);
-$pdf->Cell(140, 5, utf8_decode(Empresa::getDireccion()), 0, 1, 'R');
-$pdf->SetXY(60, 39);
-$pdf->Cell(140, 5, 'Tel: ' . Empresa::getTelefono(), 0, 1, 'R');
-$pdf->SetXY(60, 44);
-$pdf->Cell(140, 5, utf8_decode(Empresa::getEmailClientes()), 0, 1, 'R');
+// // Logo y Nombre de Empresa
 
+// // --- NUEVO ENCABEZADO ESTILO FACTURA ELECTRÓNICA ---
+// $pdf->Image('../../assets/image/' . Empresa::getLogoEmpresa(), 10, 10, 45); // Logo más grande
+// $pdf->SetFont('Arial', 'B', 13);
+// $pdf->SetXY(60, 10);
+// $pdf->Cell(140, 7, utf8_decode(Empresa::getNombre()), 0, 1, 'R');
+// $pdf->SetFont('Arial', '', 10);
+// $pdf->SetXY(60, 17);
+// $pdf->Cell(140, 5, 'R.U.C.:' . Empresa::getRuc(), 0, 1, 'R'); // Ejemplo RUC
 
-// --- BLOQUE DE DATOS DEL CLIENTE ESTILO FACTURA ELECTRÓNICA ---
-$pdf->Ln(8);
-$pdf->SetFont('Arial', 'B', 10);
-$pdf->Cell(65, 7, utf8_decode('Razón Social / Nombre y Apellidos:'), 1, 0, 'L');
-$pdf->SetFont('Arial', '', 10);
-$pdf->Cell(65, 7, utf8_decode($clienteNombres), 1, 0, 'L');
-$pdf->SetFont('Arial', 'B', 10);
-$pdf->Cell(20, 7, utf8_decode('RUC / CI:'), 1, 0, 'L');
-$pdf->SetFont('Arial', '', 10);
-$pdf->Cell(40, 7, $clienteDni, 1, 1, 'L');
+// $pdf->SetXY(60, 22);
+// $pdf->Cell(140, 5, 'FACTURA', 0, 1, 'R');
 
-$pdf->SetFont('Arial', 'B', 10);
-$pdf->Cell(65, 7, utf8_decode('Condición de Pago:'), 1, 0, 'L');
-$pdf->SetFont('Arial', '', 10);
-$pdf->Cell(65, 7, utf8_decode($primerDetalle['tipo_comp_descripcion']), 1, 0, 'L');
-$pdf->SetFont('Arial', 'B', 10);
-$pdf->Cell(20, 7, utf8_decode('Teléfono:'), 1, 0, 'L');
-$pdf->SetFont('Arial', '', 10);
-$pdf->Cell(40, 7, $clienteTelefono, 1, 1, 'L');
-
-// Fila: Fecha de Emisión (ancho completo)
-$pdf->SetFont('Arial', 'B', 10);
-$pdf->Cell(65, 7, utf8_decode('Fecha de Emisión:'), 1, 0, 'L');
-$pdf->SetFont('Arial', '', 10);
-$pdf->Cell(125, 7, $facturaFecha, 1, 1, 'L');
-
-// Fila: Email (ancho completo)
-$pdf->SetFont('Arial', 'B', 10);
-$pdf->Cell(65, 7, utf8_decode('Email:'), 1, 0, 'L');
-$pdf->SetFont('Arial', '', 10);
-$pdf->Cell(125, 7, $clienteEmail, 1, 1, 'L');
-
-$pdf->SetFont('Arial', 'B', 10);
-$pdf->Cell(65, 7, utf8_decode('Dirección:'), 1, 0, 'L');
-$pdf->SetFont('Arial', '', 10);
-$pdf->Cell(190 - 65, 7, utf8_decode($clienteDireccion), 1, 1, 'L');
+// // Datos de empresa en negro y alineados a la derecha debajo del bloque derecho
+// $pdf->SetFont('Arial', '', 10);
+// $pdf->SetXY(60, 27);
+// $pdf->Cell(140, 5, 'No.' . str_pad($facturaComprobante, 9, '0', STR_PAD_LEFT), 0, 1, 'R');
+// $pdf->SetXY(60, 34);
+// $pdf->Cell(140, 5, utf8_decode(Empresa::getDireccion()), 0, 1, 'R');
+// $pdf->SetXY(60, 39);
+// $pdf->Cell(140, 5, 'Tel: ' . Empresa::getTelefono(), 0, 1, 'R');
+// $pdf->SetXY(60, 44);
+// $pdf->Cell(140, 5, utf8_decode(Empresa::getEmailClientes()), 0, 1, 'R');
 
 
-// --- DATOS DE FACTURA ELECTRÓNICA (SI EXISTE) ---
-if ($facturaElectronica && !empty($facturaElectronica['fe_clave_acceso'])) {
-  $pdf->Ln(2);
-  $pdf->SetFillColor(220, 250, 220);
-  $pdf->SetFont('Arial', 'B', 9);
-  $pdf->Cell(190, 5, utf8_decode('INFORMACIÓN ELECTRÓNICA'), 1, 1, 'C', true);
+// // --- BLOQUE DE DATOS DEL CLIENTE ESTILO FACTURA ELECTRÓNICA ---
+// $pdf->Ln(8);
+// $pdf->SetFont('Arial', 'B', 10);
+// $pdf->Cell(65, 7, utf8_decode('Razón Social / Nombre y Apellidos:'), 1, 0, 'L');
+// $pdf->SetFont('Arial', '', 10);
+// $pdf->Cell(65, 7, utf8_decode($clienteNombres), 1, 0, 'L');
+// $pdf->SetFont('Arial', 'B', 10);
+// $pdf->Cell(20, 7, utf8_decode('RUC / CI:'), 1, 0, 'L');
+// $pdf->SetFont('Arial', '', 10);
+// $pdf->Cell(40, 7, $clienteDni, 1, 1, 'L');
 
-  $pdf->SetFont('Arial', 'B', 8);
-  $pdf->Cell(35, 5, utf8_decode('Clave de Acceso:'), 1, 0, 'L');
-  $pdf->SetFont('Arial', '', 7);
-  $pdf->Cell(155, 5, $facturaElectronica['fe_clave_acceso'], 1, 1, 'L');
+// $pdf->SetFont('Arial', 'B', 10);
+// $pdf->Cell(65, 7, utf8_decode('Condición de Pago:'), 1, 0, 'L');
+// $pdf->SetFont('Arial', '', 10);
+// $pdf->Cell(65, 7, utf8_decode($primerDetalle['tipo_comp_descripcion']), 1, 0, 'L');
+// $pdf->SetFont('Arial', 'B', 10);
+// $pdf->Cell(20, 7, utf8_decode('Teléfono:'), 1, 0, 'L');
+// $pdf->SetFont('Arial', '', 10);
+// $pdf->Cell(40, 7, $clienteTelefono, 1, 1, 'L');
 
-  if (!empty($facturaElectronica['fe_numero_autorizacion'])) {
-    $pdf->SetFont('Arial', 'B', 8);
-    $pdf->Cell(35, 5, utf8_decode('No. Autorización:'), 1, 0, 'L');
-    $pdf->SetFont('Arial', '', 8);
-    $pdf->Cell(95, 5, $facturaElectronica['fe_numero_autorizacion'], 1, 0, 'L');
-    $pdf->SetFont('Arial', 'B', 8);
-    $pdf->Cell(30, 5, utf8_decode('Fecha Autorización:'), 1, 0, 'L');
-    $pdf->SetFont('Arial', '', 8);
-    $pdf->Cell(30, 5, $facturaElectronica['fe_fecha_autorizacion'] ?? 'N/A', 1, 1, 'C');
-  }
+// // Fila: Fecha de Emisión (ancho completo)
+// $pdf->SetFont('Arial', 'B', 10);
+// $pdf->Cell(65, 7, utf8_decode('Fecha de Emisión:'), 1, 0, 'L');
+// $pdf->SetFont('Arial', '', 10);
+// $pdf->Cell(125, 7, $facturaFecha, 1, 1, 'L');
 
-  $pdf->SetFont('Arial', 'B', 8);
-  $pdf->Cell(35, 5, 'Estado SRI:', 1, 0, 'L');
-  $estadoSRI = $facturaElectronica['fe_estado_sri'] ?? 'PENDIENTE';
-  if ($estadoSRI === 'AUTORIZADO') {
-    $pdf->SetTextColor(0, 128, 0);
-  } elseif (in_array($estadoSRI, ['ERROR', 'NO_AUTORIZADO', 'ERROR_ENVIO'])) {
-    $pdf->SetTextColor(180, 0, 0);
-  } else {
-    $pdf->SetTextColor(200, 100, 0);
-  }
-  $pdf->SetFont('Arial', 'B', 8);
-  $pdf->Cell(155, 5, $estadoSRI, 1, 1, 'L');
-  $pdf->SetTextColor(0, 0, 0);
-}
+// // Fila: Email (ancho completo)
+// $pdf->SetFont('Arial', 'B', 10);
+// $pdf->Cell(65, 7, utf8_decode('Email:'), 1, 0, 'L');
+// $pdf->SetFont('Arial', '', 10);
+// $pdf->Cell(125, 7, $clienteEmail, 1, 1, 'L');
 
-// --- TABLA DE PRODUCTOS MEJORADA ---
-
-$pdf->Ln(5);
-$pdf->SetFont('Arial', 'B', 10);
-$pdf->Cell(28, 8, 'Cod. Principal', 1, 0, 'C');
-$pdf->Cell(15, 8, 'Cant', 1, 0, 'C');
-$pdf->Cell(75, 8, utf8_decode('Descripción'), 1, 0, 'C');
-$pdf->Cell(25, 8, 'Precio Unitario', 1, 0, 'C');
-$pdf->Cell(22, 8, 'Descuento', 1, 0, 'C');
-$pdf->Cell(25, 8, 'Precio Total', 1, 1, 'C');
-$pdf->SetFont('Arial', '', 10);
-foreach ($detallesFactura as $detalle) {
-  $pdf->Cell(28, 7, $detalle['producto_codigo'], 1, 0, 'C');
-  $pdf->Cell(15, 7, $detalle['detalle_cantidad'], 1, 0, 'C');
-  // Truncar nombre si es muy largo
-  $nombreProducto = utf8_decode($detalle['producto_nombre']);
-  $pdf->SetFont('Arial', '', 9); // fuente un poco menor para descripción
-  if ($pdf->GetStringWidth($nombreProducto) > 73) {
-    while ($pdf->GetStringWidth($nombreProducto . '...') > 73) {
-      $nombreProducto = substr($nombreProducto, 0, -1);
-    }
-    $nombreProducto .= '...';
-  }
-  $pdf->Cell(75, 7, $nombreProducto, 1, 0, 'L');
-  $pdf->SetFont('Arial', '', 10); // restaurar fuente
-  $pdf->Cell(25, 7, '$ ' . number_format($detalle['detalle_precio_unit'], 2), 1, 0, 'R');
-  $descuento = $detalle['detalle_descuento'] > 0 ? number_format($detalle['detalle_descuento'], 2) . '%' : '0.00%';
-  $pdf->Cell(22, 7, $descuento, 1, 0, 'R');
-  $pdf->Cell(25, 7, '$ ' . number_format($detalle['detalle_total'], 2), 1, 1, 'R');
-}
+// $pdf->SetFont('Arial', 'B', 10);
+// $pdf->Cell(65, 7, utf8_decode('Dirección:'), 1, 0, 'L');
+// $pdf->SetFont('Arial', '', 10);
+// $pdf->Cell(190 - 65, 7, utf8_decode($clienteDireccion), 1, 1, 'L');
 
 
+// // --- DATOS DE FACTURA ELECTRÓNICA (SI EXISTE) ---
+// if ($facturaElectronica && !empty($facturaElectronica['fe_clave_acceso'])) {
+//   $pdf->Ln(2);
+//   $pdf->SetFillColor(220, 250, 220);
+//   $pdf->SetFont('Arial', 'B', 9);
+//   $pdf->Cell(190, 5, utf8_decode('INFORMACIÓN ELECTRÓNICA'), 1, 1, 'C', true);
 
-// --- INFORMACIÓN ADICIONAL Y FORMA DE PAGO ---
-$pdf->Ln(3);
+//   $pdf->SetFont('Arial', 'B', 8);
+//   $pdf->Cell(35, 5, utf8_decode('Clave de Acceso:'), 1, 0, 'L');
+//   $pdf->SetFont('Arial', '', 7);
+//   $pdf->Cell(155, 5, $facturaElectronica['fe_clave_acceso'], 1, 1, 'L');
 
-// --- ALINEAR TOTALES A LA ALTURA DE LA TABLA DE PRODUCTOS ---
-$yTotales = $pdf->GetY();
-if ($yTotales < 110) {
-  $yTotales = 110;
-} // Altura mínima para evitar superposición
-$pdf->SetY($yTotales);
+//   if (!empty($facturaElectronica['fe_numero_autorizacion'])) {
+//     $pdf->SetFont('Arial', 'B', 8);
+//     $pdf->Cell(35, 5, utf8_decode('No. Autorización:'), 1, 0, 'L');
+//     $pdf->SetFont('Arial', '', 8);
+//     $pdf->Cell(95, 5, $facturaElectronica['fe_numero_autorizacion'], 1, 0, 'L');
+//     $pdf->SetFont('Arial', 'B', 8);
+//     $pdf->Cell(30, 5, utf8_decode('Fecha Autorización:'), 1, 0, 'L');
+//     $pdf->SetFont('Arial', '', 8);
+//     $pdf->Cell(30, 5, $facturaElectronica['fe_fecha_autorizacion'] ?? 'N/A', 1, 1, 'C');
+//   }
 
-// Totales
+//   $pdf->SetFont('Arial', 'B', 8);
+//   $pdf->Cell(35, 5, 'Estado SRI:', 1, 0, 'L');
+//   $estadoSRI = $facturaElectronica['fe_estado_sri'] ?? 'PENDIENTE';
+//   if ($estadoSRI === 'AUTORIZADO') {
+//     $pdf->SetTextColor(0, 128, 0);
+//   } elseif (in_array($estadoSRI, ['ERROR', 'NO_AUTORIZADO', 'ERROR_ENVIO'])) {
+//     $pdf->SetTextColor(180, 0, 0);
+//   } else {
+//     $pdf->SetTextColor(200, 100, 0);
+//   }
+//   $pdf->SetFont('Arial', 'B', 8);
+//   $pdf->Cell(155, 5, $estadoSRI, 1, 1, 'L');
+//   $pdf->SetTextColor(0, 0, 0);
+// }
 
-// --- NUEVO BLOQUE DE TOTALES ESTILO FACTURA ELECTRÓNICA ---
-$anchoCol1 = 55;
-$anchoCol2 = 35;
-$anchoTablaTotales = $anchoCol1 + $anchoCol2;
-$margenDerecho = 10; // margen derecho de la página
-$xTotales = 210 - $margenDerecho - $anchoTablaTotales; // 210 es el ancho A4 en mm
-$yTotales = $pdf->GetY();
-$pdf->SetXY($xTotales, $yTotales);
-$pdf->SetFont('Arial', 'B', 10);
-$pdf->Cell($anchoCol1, 7, 'SUBTOTAL', 1, 0, 'L');
-$pdf->Cell($anchoCol2, 7, '$ ' . number_format($facturaSubTotal, 2), 1, 1, 'R');
-$descuentoPorcentajeStr = rtrim(rtrim(number_format($facturaDescuentoPorcentaje, 2), '0'), '.');
-if ($descuentoPorcentajeStr === '') $descuentoPorcentajeStr = '0';
-$pdf->SetX($xTotales);
-$pdf->Cell($anchoCol1, 7, 'DESCUENTO (' . $descuentoPorcentajeStr . '%)', 1, 0, 'L');
-$pdf->Cell($anchoCol2, 7, '$ ' . number_format($facturaDescuentoValor, 2), 1, 1, 'R');
-$pdf->SetX($xTotales);
-$facturaIva = isset($primerDetalle['factura_iva']) ? $primerDetalle['factura_iva'] : 0;
-$pdf->Cell($anchoCol1, 7, 'IVA 15%', 1, 0, 'L');
-$pdf->Cell($anchoCol2, 7, '$ ' . number_format($facturaIva, 2), 1, 1, 'R');
-$pdf->SetX($xTotales);
-$pdf->Cell($anchoCol1, 7, 'VALOR TOTAL', 1, 0, 'L');
-$pdf->Cell($anchoCol2, 7, '$ ' . number_format($facturaTotal, 2), 1, 1, 'R');
+// // --- TABLA DE PRODUCTOS MEJORADA ---
+
+// $pdf->Ln(5);
+// $pdf->SetFont('Arial', 'B', 10);
+// $pdf->Cell(28, 8, 'Cod. Principal', 1, 0, 'C');
+// $pdf->Cell(15, 8, 'Cant', 1, 0, 'C');
+// $pdf->Cell(75, 8, utf8_decode('Descripción'), 1, 0, 'C');
+// $pdf->Cell(25, 8, 'Precio Unitario', 1, 0, 'C');
+// $pdf->Cell(22, 8, 'Descuento', 1, 0, 'C');
+// $pdf->Cell(25, 8, 'Precio Total', 1, 1, 'C');
+// $pdf->SetFont('Arial', '', 10);
+// foreach ($detallesFactura as $detalle) {
+//   $pdf->Cell(28, 7, $detalle['producto_codigo'], 1, 0, 'C');
+//   $pdf->Cell(15, 7, $detalle['detalle_cantidad'], 1, 0, 'C');
+//   // Truncar nombre si es muy largo
+//   $nombreProducto = utf8_decode($detalle['producto_nombre']);
+//   $pdf->SetFont('Arial', '', 9); // fuente un poco menor para descripción
+//   if ($pdf->GetStringWidth($nombreProducto) > 73) {
+//     while ($pdf->GetStringWidth($nombreProducto . '...') > 73) {
+//       $nombreProducto = substr($nombreProducto, 0, -1);
+//     }
+//     $nombreProducto .= '...';
+//   }
+//   $pdf->Cell(75, 7, $nombreProducto, 1, 0, 'L');
+//   $pdf->SetFont('Arial', '', 10); // restaurar fuente
+//   $pdf->Cell(25, 7, '$ ' . number_format($detalle['detalle_precio_unit'], 2), 1, 0, 'R');
+//   $descuento = $detalle['detalle_descuento'] > 0 ? number_format($detalle['detalle_descuento'], 2) . '%' : '0.00%';
+//   $pdf->Cell(22, 7, $descuento, 1, 0, 'R');
+//   $pdf->Cell(25, 7, '$ ' . number_format($detalle['detalle_total'], 2), 1, 1, 'R');
+// }
 
 
 
-// Términos y condiciones
-$pdf->Ln(20);
-$pdf->SetFont('Arial', 'B', 10);
-$pdf->Cell(0, 6, utf8_decode("TÉRMINOS Y CONDICIONES"), 0, 1, 'C');
-$pdf->SetFont('Arial', '', 10);
-$pdf->MultiCell(0, 6, utf8_decode("El cliente se compromete a pagar la factura en su totalidad en la fecha establecida.\nCopyright@: ") . utf8_decode(Empresa::getNombre()), 0, 'C');
+// // --- INFORMACIÓN ADICIONAL Y FORMA DE PAGO ---
+// $pdf->Ln(3);
+
+// // --- ALINEAR TOTALES A LA ALTURA DE LA TABLA DE PRODUCTOS ---
+// $yTotales = $pdf->GetY();
+// if ($yTotales < 110) {
+//   $yTotales = 110;
+// } // Altura mínima para evitar superposición
+// $pdf->SetY($yTotales);
+
+// // Totales
+
+// // --- NUEVO BLOQUE DE TOTALES ESTILO FACTURA ELECTRÓNICA ---
+// $anchoCol1 = 55;
+// $anchoCol2 = 35;
+// $anchoTablaTotales = $anchoCol1 + $anchoCol2;
+// $margenDerecho = 10; // margen derecho de la página
+// $xTotales = 210 - $margenDerecho - $anchoTablaTotales; // 210 es el ancho A4 en mm
+// $yTotales = $pdf->GetY();
+// $pdf->SetXY($xTotales, $yTotales);
+// $pdf->SetFont('Arial', 'B', 10);
+// $pdf->Cell($anchoCol1, 7, 'SUBTOTAL', 1, 0, 'L');
+// $pdf->Cell($anchoCol2, 7, '$ ' . number_format($facturaSubTotal, 2), 1, 1, 'R');
+// $descuentoPorcentajeStr = rtrim(rtrim(number_format($facturaDescuentoPorcentaje, 2), '0'), '.');
+// if ($descuentoPorcentajeStr === '') $descuentoPorcentajeStr = '0';
+// $pdf->SetX($xTotales);
+// $pdf->Cell($anchoCol1, 7, 'DESCUENTO (' . $descuentoPorcentajeStr . '%)', 1, 0, 'L');
+// $pdf->Cell($anchoCol2, 7, '$ ' . number_format($facturaDescuentoValor, 2), 1, 1, 'R');
+// $pdf->SetX($xTotales);
+// $facturaIva = isset($primerDetalle['factura_iva']) ? $primerDetalle['factura_iva'] : 0;
+// $pdf->Cell($anchoCol1, 7, 'IVA 15%', 1, 0, 'L');
+// $pdf->Cell($anchoCol2, 7, '$ ' . number_format($facturaIva, 2), 1, 1, 'R');
+// $pdf->SetX($xTotales);
+// $pdf->Cell($anchoCol1, 7, 'VALOR TOTAL', 1, 0, 'L');
+// $pdf->Cell($anchoCol2, 7, '$ ' . number_format($facturaTotal, 2), 1, 1, 'R');
+
+
+
+// // Términos y condiciones
+// $pdf->Ln(20);
+// $pdf->SetFont('Arial', 'B', 10);
+// $pdf->Cell(0, 6, utf8_decode("TÉRMINOS Y CONDICIONES"), 0, 1, 'C');
+// $pdf->SetFont('Arial', '', 10);
+// $pdf->MultiCell(0, 6, utf8_decode("El cliente se compromete a pagar la factura en su totalidad en la fecha establecida.\nCopyright@: ") . utf8_decode(Empresa::getNombre()), 0, 'C');
 
 $nombreArchivo = preg_replace('/[^A-Za-z0-9\-]/', '', $facturaComprobante) . '.pdf';
 $pdfString = $pdf->Output('S', $nombreArchivo);
