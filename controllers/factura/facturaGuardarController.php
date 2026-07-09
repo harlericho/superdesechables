@@ -189,12 +189,23 @@ if ($facturaIncluyeIva) {
     // Toggle ON: subtotal_factura ya es la base neta (post-descuento, sin IVA).
     // El descuento_global se guarda solo para mostrarlo en PDF, no se vuelve a restar.
     $base = $factura_subtotal;
+    // El total real cobrado es la suma exacta de los precios brutos (rawSum - descuento),
+    // ya calculada sin divisiones en el frontend (venta.js: totalFinal). Recalcular
+    // total = base*(1+IVA/100) a partir del subtotal YA REDONDEADO reintroduce un redondeo
+    // doble (dividir para sacar el neto y volver a multiplicar) que puede desviar el total
+    // en 1 centavo del monto realmente cobrado — por eso "Forma de Pago" no cuadraba con
+    // "VALOR TOTAL". Se usa el total del frontend como fuente de verdad y el IVA se calcula
+    // por diferencia, para que base + iva = total cuadre exacto siempre.
+    $factura_total = isset($_POST['total_factura']) && $_POST['total_factura'] !== ''
+        ? floatval($_POST['total_factura'])
+        : round($base + ($base * $factura_impuesto / 100), 2);
+    $factura_iva = round($factura_total - $base, 2);
 } else {
     $base = $factura_subtotal - $factura_descuento;
     if ($base < 0) $base = 0;
+    $factura_iva = ($base * $factura_impuesto) / 100;
+    $factura_total = $base + $factura_iva;
 }
-$factura_iva = ($base * $factura_impuesto) / 100;
-$factura_total = $base + $factura_iva;
 
 $arrayName = array(
     'factura_num_comprobante' => $_POST['numero_factura'],
