@@ -377,7 +377,7 @@ function construirFacturaPdf(array $detallesFactura, ?array $facturaElectronica)
     $filasTotales = [
       ['SUBTOTAL 15%', $facturaElectronica['fe_subtotal_iva'] ?? $facturaSubTotal],
       ['SUBTOTAL 0%', $facturaElectronica['fe_subtotal_iva0'] ?? 0],
-      ['SUBTOTAL SIN IMPUESTOS', $facturaSubTotal],
+      ['SUBTOTAL SIN IMPUESTOS', $facturaElectronica['fe_subtotal_sin_impuestos'] ?? $facturaSubTotal],
       ['SUBTOTAL Exento IVA', 0],
       ['DESCUENTO', $facturaDescuentoValor],
       ['ICE', 0],
