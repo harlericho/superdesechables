@@ -264,11 +264,22 @@ class FacturacionElectronicaService
     // Por ahora asumimos que todo tiene IVA (según configuración)
     $porcentajeIVA = floatval($factura['factura_impuesto']);
 
-    // Descuento global de la factura (si existe) para prorratearlo entre los detalles
-    $descuentoGlobal = floatval($factura['factura_descuento_global'] ?? 0);
+    // Si la venta se guardó con "Total incluye IVA" activo, detalle_precio_unit/detalle_total
+    // y factura_descuento_global vienen con el IVA metido adentro (precio final al cliente).
+    // Hay que "destaparlos" a neto ANTES de aplicar la regla del SRI (precioTotalSinImpuesto =
+    // cantidad*precioUnitario - descuento), o el XML declara el IVA dos veces.
+    $facturaIncluyeIva = !empty($factura['factura_incluye_iva']);
+    $factorIva = ($facturaIncluyeIva && $porcentajeIVA > 0) ? (1 + $porcentajeIVA / 100) : 1;
+
+    // Descuento global de la factura (si existe) para prorratearlo entre los detalles.
+    // El peso de cada línea es su neto YA con el descuento por producto aplicado
+    // (detalle_total), no cantidad*precio de catálogo — si se usa el precio de catálogo,
+    // una línea con más descuento por producto que otra recibe de todos modos la misma
+    // proporción de descuento global, y el total del comprobante queda descuadrado.
+    $descuentoGlobal = floatval($factura['factura_descuento_global'] ?? 0) / $factorIva;
     $subtotalBrutoDetalles = 0;
     foreach ($detalles as $detalle) {
-      $subtotalBrutoDetalles += floatval($detalle['detalle_cantidad']) * floatval($detalle['detalle_precio_unit']);
+      $subtotalBrutoDetalles += round(floatval($detalle['detalle_total']) / $factorIva, 2);
     }
 
     $datosFactura = [
@@ -296,19 +307,30 @@ class FacturacionElectronicaService
     // Procesar detalles
     foreach ($detalles as $detalle) {
       $cantidad = floatval($detalle['detalle_cantidad']);
-      $precioUnit = floatval($detalle['detalle_precio_unit']);
-      $subtotalLinea = $cantidad * $precioUnit;
 
       // detalle_total ya viene neto del descuento por producto (detalle_descuento es un %,
-      // no un valor monetario). Se calcula el descuento en dólares por diferencia para que
-      // SIEMPRE cuadre con la regla del SRI: precioTotalSinImpuesto = cantidad*precioUnitario - descuento
-      $precioNetoProducto = floatval($detalle['detalle_total']);
-      $descuentoProducto = max(0, $subtotalLinea - $precioNetoProducto);
+      // no un valor monetario). Si la factura se guardó con IVA incluido, además viene bruto:
+      // se destapa a neto con el mismo factor usado arriba para el descuento global.
+      // Este valor (no el precioUnitario) es la fuente de verdad de cuánto vale la línea.
+      $precioNetoProducto = round(floatval($detalle['detalle_total']) / $factorIva, 2);
 
-      // Prorratear el descuento global de la factura según el peso de esta línea
+      // El SRI limita <precioUnitario> a 2 decimales (cvc-fractionDigits-valid). Se deriva
+      // del total de línea (no de detalle_precio_unit/factorIva de forma independiente) y se
+      // redondea SIEMPRE hacia arriba: así cantidad*precioUnitario nunca queda por debajo de
+      // precioNetoProducto y "descuento" (que el SRI exige >= 0) nunca da negativo.
+      $precioUnit = $cantidad > 0 ? ceil(($precioNetoProducto / $cantidad) * 100) / 100 : 0;
+      $subtotalLinea = round($cantidad * $precioUnit, 2);
+
+      // Se calcula el descuento en dólares por diferencia para que SIEMPRE cuadre con la
+      // regla del SRI: precioTotalSinImpuesto = cantidad*precioUnitario - descuento
+      $descuentoProducto = round(max(0, $subtotalLinea - $precioNetoProducto), 2);
+
+      // Prorratear el descuento global de la factura según el peso de esta línea (su neto
+      // ya con descuento por producto aplicado, no subtotalLinea que es cantidad*precioUnitario
+      // redondeado y no refleja ese descuento).
       $descuentoGlobalLinea = 0;
       if ($descuentoGlobal > 0 && $subtotalBrutoDetalles > 0) {
-        $descuentoGlobalLinea = $descuentoGlobal * ($subtotalLinea / $subtotalBrutoDetalles);
+        $descuentoGlobalLinea = $descuentoGlobal * ($precioNetoProducto / $subtotalBrutoDetalles);
       }
 
       $descuentoLinea = round($descuentoProducto + $descuentoGlobalLinea, 2);
@@ -340,13 +362,78 @@ class FacturacionElectronicaService
         'producto_codigo' => $detalle['producto_codigo'] ?? 'PROD',
         'producto_nombre' => $detalle['producto_nombre'],
         'detalle_cantidad' => $detalle['detalle_cantidad'],
-        'detalle_precio_unit' => $detalle['detalle_precio_unit'],
+        'detalle_precio_unit' => $precioUnit,
         'detalle_descuento' => $descuentoLinea,
         'precio_sin_impuesto' => $precioSinImpuesto,
         'codigo_porcentaje_iva' => $codigoPorcentaje,
         'tarifa_iva' => $tarifaIVA,
         'valor_iva' => $valorIVA
       ];
+    }
+
+    // El redondeo por línea (precioUnitario a 2 decimales, IVA por línea) puede dejar el total
+    // 1-2 centavos desviado del monto real ya calculado de forma global (factura_total, el
+    // mismo que se ve en "Forma de Pago"). Se busca, en centavos de a uno, cuánto mover el
+    // DESCUENTO de la última línea para que el total cuadre EXACTO — su IVA siempre se
+    // recalcula a partir de esa base ajustada (nunca se toca el IVA de forma independiente),
+    // así valor_iva = baseImponible*tarifa/100 se sigue cumpliendo por construcción y no se
+    // repite el "ERROR EN DIFERENCIAS" que causaba ajustar el IVA directamente.
+    $totalCalculadoCent = (int) round(($subtotalIVA + $subtotalIVA0 + $ivaValor + $datosFactura['fe_propina']) * 100);
+    $totalRealCent = (int) round(floatval($factura['factura_total']) * 100);
+    $diferenciaTotalCent = $totalRealCent - $totalCalculadoCent;
+
+    if ($diferenciaTotalCent !== 0 && !empty($datosFactura['detalles'])) {
+      $ultimoIndex = count($datosFactura['detalles']) - 1;
+      $ultimaLinea = &$datosFactura['detalles'][$ultimoIndex];
+      $baseAnteriorCent = (int) round($ultimaLinea['precio_sin_impuesto'] * 100);
+      $descuentoAnteriorCent = (int) round($ultimaLinea['detalle_descuento'] * 100);
+      $ivaAnteriorCent = (int) round($ultimaLinea['valor_iva'] * 100);
+      $tarifaUltima = $ultimaLinea['tarifa_iva'];
+
+      // Un cambio de "delta" centavos en la base mueve el IVA de la línea 0 o 1 centavo, pero
+      // por el redondeo del IVA la secuencia de totales alcanzables puede saltarse algún
+      // centavo puntual (p. ej. nunca pasar por -1 aunque sí por -2 y 0). Se prueba un rango
+      // de deltas cercanos al objetivo, del más cercano al más lejano, hasta encontrar uno que
+      // cuadre exacto; si ninguno cuadra (raro), se deja el total tal cual sale del cálculo por
+      // línea — sigue siendo válido para el SRI, solo puede quedar 1 centavo de diferencia
+      // frente a "Forma de Pago".
+      $candidatos = [];
+      for ($k = -8; $k <= 8; $k++) {
+        $candidatos[] = $diferenciaTotalCent + $k;
+      }
+      usort($candidatos, function ($a, $b) use ($diferenciaTotalCent) {
+        return abs($a - $diferenciaTotalCent) <=> abs($b - $diferenciaTotalCent);
+      });
+
+      foreach ($candidatos as $deltaCent) {
+        $nuevoDescuentoCent = $descuentoAnteriorCent - $deltaCent;
+        $nuevaBaseCent = $baseAnteriorCent + $deltaCent;
+        if ($nuevoDescuentoCent < 0 || $nuevaBaseCent < 0) {
+          continue;
+        }
+        $nuevaBase = $nuevaBaseCent / 100;
+        $nuevoIva = round($nuevaBase * $tarifaUltima / 100, 2);
+        $nuevoIvaCent = (int) round($nuevoIva * 100);
+        $cambioTotalCent = $deltaCent + ($nuevoIvaCent - $ivaAnteriorCent);
+
+        if ($cambioTotalCent === $diferenciaTotalCent) {
+          $nuevoDescuento = $nuevoDescuentoCent / 100;
+
+          if ($tarifaUltima > 0) {
+            $subtotalIVA = round($subtotalIVA + $deltaCent / 100, 2);
+            $ivaValor = round($ivaValor - $ivaAnteriorCent / 100 + $nuevoIva, 2);
+          } else {
+            $subtotalIVA0 = round($subtotalIVA0 + $deltaCent / 100, 2);
+          }
+          $descuentoTotalAcumulado = round($descuentoTotalAcumulado - $descuentoAnteriorCent / 100 + $nuevoDescuento, 2);
+
+          $ultimaLinea['detalle_descuento'] = $nuevoDescuento;
+          $ultimaLinea['precio_sin_impuesto'] = $nuevaBase;
+          $ultimaLinea['valor_iva'] = $nuevoIva;
+          break;
+        }
+      }
+      unset($ultimaLinea);
     }
 
     $datosFactura['fe_subtotal_sin_impuestos'] = round($subtotalIVA + $subtotalIVA0, 2);

@@ -19,7 +19,7 @@ class Db
     {
         try {
             $config = self::getConfig();
-            $dsn = "mysql:host={$config['host']};dbname={$config['dbname']}";
+            $dsn = "mysql:host={$config['host']};dbname={$config['dbname']};charset=utf8mb4";
             $db = new PDO($dsn, $config['user'], $config['password']);
             $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             return $db;

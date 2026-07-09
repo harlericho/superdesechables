@@ -183,7 +183,9 @@ $factura_descuento = isset($_POST['descuento_global']) ? floatval($_POST['descue
 $factura_descuento_porcentaje = isset($_POST['descuento_global_porcentaje']) ? floatval($_POST['descuento_global_porcentaje']) : 0;
 $factura_impuesto = floatval($_POST['impuesto_factura']);
 
-if (!empty($_POST['incluye_iva']) && $_POST['incluye_iva'] == '1') {
+$facturaIncluyeIva = (!empty($_POST['incluye_iva']) && $_POST['incluye_iva'] == '1') ? 1 : 0;
+
+if ($facturaIncluyeIva) {
     // Toggle ON: subtotal_factura ya es la base neta (post-descuento, sin IVA).
     // El descuento_global se guarda solo para mostrarlo en PDF, no se vuelve a restar.
     $base = $factura_subtotal;
@@ -198,6 +200,7 @@ $arrayName = array(
     'factura_num_comprobante' => $_POST['numero_factura'],
     'factura_fecha' => $_POST['fecha_factura'],
     'factura_impuesto' => $factura_impuesto,
+    'factura_incluye_iva' => $facturaIncluyeIva,
     'factura_subtotal' => $factura_subtotal,
     'factura_descuento_global' => $factura_descuento,
     'factura_descuento_global_porcentaje' => $factura_descuento_porcentaje,

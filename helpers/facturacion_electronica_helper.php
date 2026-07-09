@@ -527,11 +527,15 @@ class FacturacionElectronicaHelper
    */
   public static function textoLeyendaRimpe($categoriaRimpe)
   {
+    // \u{00C9} en vez de "É" literal: la letra acentuada escrita directamente en el
+    // archivo ha llegado dañada al SRI ("RÃGIMEN") por una conversión de charset en
+    // algún punto de la cadena de guardado/envío. El escape unicode se resuelve a los
+    // bytes UTF-8 correctos en tiempo de ejecución, sin depender de esa conversión.
     switch ($categoriaRimpe) {
       case 'NEGOCIO_POPULAR':
-        return 'CONTRIBUYENTE NEGOCIO POPULAR - RÉGIMEN RIMPE';
+        return "CONTRIBUYENTE NEGOCIO POPULAR - R\u{00C9}GIMEN RIMPE";
       case 'EMPRENDEDOR':
-        return 'CONTRIBUYENTE RÉGIMEN RIMPE';
+        return "CONTRIBUYENTE R\u{00C9}GIMEN RIMPE";
       default:
         return null;
     }
