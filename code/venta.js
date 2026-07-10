@@ -131,7 +131,8 @@ const app = new (function () {
       .then((res) => res.json())
       .then((data) => {
         if (data.length > 0) {
-          let html = [];
+          this._detallesData = data;
+          let html = "";
           data.forEach((element) => {
             html += "<tr>";
             html +=
@@ -157,6 +158,7 @@ const app = new (function () {
           this.detalles.innerHTML = html;
           this.sumarSubTotal();
         } else {
+          this._detallesData = [];
           this.detalles.innerHTML =
             "<tr><td colspan='7'>No hay detalles de productos</td></tr>";
           this._rawProductSum = 0;
@@ -334,13 +336,55 @@ const app = new (function () {
     if (descuentoPorcentaje > 100) descuentoPorcentaje = 100;
 
     if (incluyeIva && tax > 0) {
-      // Modo: precios de productos ya incluyen IVA
-      // rawSum = total con IVA incluido → back-calcular subtotal neto
       let descuento = rawSum * (descuentoPorcentaje / 100);
       let totalFinal = rawSum - descuento;
-      let subtotalNeto = totalFinal / (1 + tax / 100);
-      this.subTotalFactura.value = subtotalNeto.toFixed(2);
-      this.totalFactura.value = totalFinal.toFixed(2);
+      
+      if (this._detallesData && this._detallesData.length > 0) {
+          let factorIva = 1 + tax / 100;
+          let sumPrecioSinImpuesto = 0;
+          let sumIva = 0;
+          
+          let subtotalBrutoDetalles = 0;
+          this._detallesData.forEach((element) => {
+              subtotalBrutoDetalles += Math.round((parseFloat(element.temp_total) / factorIva) * 100) / 100;
+          });
+          
+          let descuentoGlobalMonto = descuento / factorIva;
+
+          this._detallesData.forEach((element) => {
+              let precioNetoProducto = Math.round((parseFloat(element.temp_total) / factorIva) * 100) / 100;
+              let cantidad = parseFloat(element.temp_cantidad_vender);
+              let precioUnit = cantidad > 0 ? Math.ceil((precioNetoProducto / cantidad) * 100) / 100 : 0;
+              let subtotalLinea = Math.round(cantidad * precioUnit * 100) / 100;
+              let descuentoProducto = Math.round(Math.max(0, subtotalLinea - precioNetoProducto) * 100) / 100;
+              
+              let descuentoGlobalLinea = 0;
+              if (descuentoGlobalMonto > 0 && subtotalBrutoDetalles > 0) {
+                  descuentoGlobalLinea = descuentoGlobalMonto * (precioNetoProducto / subtotalBrutoDetalles);
+              }
+              let descuentoLinea = Math.round((descuentoProducto + descuentoGlobalLinea) * 100) / 100;
+              let precioSinImpuesto = Math.round((subtotalLinea - descuentoLinea) * 100) / 100;
+              let valorIva = Math.round((precioSinImpuesto * tax / 100) * 100) / 100;
+              
+              sumPrecioSinImpuesto += precioSinImpuesto;
+              sumIva += valorIva;
+          });
+          
+          let totalCalculadoCent = Math.round((sumPrecioSinImpuesto + sumIva) * 100);
+          let totalRealCent = Math.round(totalFinal * 100);
+          let diffCent = totalRealCent - totalCalculadoCent;
+          
+          if (diffCent !== 0) {
+              sumPrecioSinImpuesto += diffCent / 100;
+          }
+          
+          this.subTotalFactura.value = sumPrecioSinImpuesto.toFixed(2);
+          this.totalFactura.value = totalFinal.toFixed(2);
+      } else {
+          let subtotalNeto = totalFinal / (1 + tax / 100);
+          this.subTotalFactura.value = subtotalNeto.toFixed(2);
+          this.totalFactura.value = totalFinal.toFixed(2);
+      }
     } else {
       // Modo normal: rawSum es el subtotal sin IVA → agregar IVA encima
       this.subTotalFactura.value = rawSum.toFixed(2);

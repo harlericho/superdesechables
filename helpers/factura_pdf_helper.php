@@ -340,16 +340,21 @@ function construirFacturaPdf(array $detallesFactura, ?array $facturaElectronica)
   $pdf->Cell(22, 8, 'Descuento', 1, 0, 'C');
   $pdf->Cell(25, 8, 'Precio Total', 1, 1, 'C');
   $pdf->SetFont('Arial', '', 10);
+  $pdf->SetFont('Arial', '', 10);
+
   foreach ($detallesFactura as $detalle) {
     $nombreTexto = utf8_decode($detalle['producto_nombre']);
-
+    
     // La descripción puede envolverse en varias líneas: se calcula cuántas para que
     // el resto de celdas de la fila (código, cantidad, precios) tengan esa misma
     // altura y no queden más cortas que la descripción (lo que provocaba que la
     // siguiente fila se dibujara encima del texto todavía visible de esta).
-    $pdf->SetFont('Arial', '', 10);
     $numLineas = max(1, $pdf->NbLines(75, $nombreTexto));
     $alturaFila = $numLineas * 7;
+
+    if ($pdf->GetY() + $alturaFila > 280) {
+      $pdf->AddPage();
+    }
 
     $xFila = $pdf->GetX();
     $yFila = $pdf->GetY();
@@ -361,16 +366,18 @@ function construirFacturaPdf(array $detallesFactura, ?array $facturaElectronica)
     $pdf->MultiCell(75, 7, $nombreTexto, 1, 'L');
     $pdf->SetXY($xDesc + 75, $yFila);
 
-    $pdf->Cell(25, $alturaFila, '$ ' . number_format($detalle['detalle_precio_unit'], 2), 1, 0, 'R');
-    $descuento = $detalle['detalle_descuento'] > 0 ? number_format($detalle['detalle_descuento'], 2) . '%' : '0.00%';
-    $pdf->Cell(22, $alturaFila, $descuento, 1, 0, 'R');
-    $pdf->Cell(25, $alturaFila, '$ ' . number_format($detalle['detalle_total'], 2), 1, 0, 'R');
+    $precioUnitPdf = floatval($detalle['detalle_precio_unit']);
+    $precioNetoProducto = floatval($detalle['detalle_total']);
+    $descuentoMostrado = $detalle['detalle_descuento'] > 0 ? number_format($detalle['detalle_descuento'], 2) . '%' : '0.00%';
+
+    $pdf->Cell(25, $alturaFila, '$ ' . number_format($precioUnitPdf, 2), 1, 0, 'R');
+    $pdf->Cell(22, $alturaFila, $descuentoMostrado, 1, 0, 'R');
+    $pdf->Cell(25, $alturaFila, '$ ' . number_format($precioNetoProducto, 2), 1, 0, 'R');
 
     $pdf->SetXY($xFila, $yFila + $alturaFila);
   }
 
   $pdf->Ln(3);
-  $yBloque = $pdf->GetY();
 
   // --- TOTALES (a la derecha) ---
   if ($tieneFE) {
@@ -403,6 +410,11 @@ function construirFacturaPdf(array $detallesFactura, ?array $facturaElectronica)
   $anchoTotales = $anchoCol1 + $anchoCol2;
   $xTotales = 210 - 10 - $anchoTotales;
   $altoTotales = count($filasTotales) * 7;
+
+  if ($pdf->GetY() + $altoTotales + 45 > 285) {
+    $pdf->AddPage();
+  }
+  $yBloque = $pdf->GetY();
 
   $pdf->SetXY($xTotales, $yBloque);
   $pdf->SetFont('Arial', 'B', 10);
