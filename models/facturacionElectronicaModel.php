@@ -90,7 +90,8 @@ class FacturacionElectronicaModel
                         config_fe_email_envio = :email_envio,
                         config_fe_email_copia = :email_copia,
                         config_fe_enviar_email_automatico = :enviar_email_automatico,
-                        config_fe_activo = :activo
+                        config_fe_activo = :activo,
+                        config_fe_permitir_ventas_simples = :permitir_ventas_simples
                         WHERE config_fe_id = :id";
       } else {
         // Insertar
@@ -102,15 +103,15 @@ class FacturacionElectronicaModel
                          config_fe_certificado_password, config_fe_certificado_fecha_caducidad,
                          config_fe_ambiente, config_fe_tipo_emision,
                          config_fe_email_envio, config_fe_email_copia, config_fe_enviar_email_automatico,
-                         config_fe_activo)
-                        VALUES (:ruc, :razon_social, :nombre_comercial, 
+                         config_fe_activo, config_fe_permitir_ventas_simples)
+                        VALUES (:ruc, :razon_social, :nombre_comercial,  
                                 :direccion_matriz, :direccion_sucursal,
                                 :obligado_contabilidad, :regimen_microempresa,
                                 :agente_retencion, :contribuyente_rimpe,
                                 :certificado_password, :certificado_fecha_caducidad,
                                 :ambiente, :tipo_emision,
                                 :email_envio, :email_copia, :enviar_email_automatico,
-                                :activo)";
+                                :activo, :permitir_ventas_simples)";
       }
 
       $query = Db::dbConnection()->prepare($sql);
@@ -136,6 +137,7 @@ class FacturacionElectronicaModel
       $query->bindParam(":email_copia", $data['config_fe_email_copia'], PDO::PARAM_STR);
       $query->bindParam(":enviar_email_automatico", $data['config_fe_enviar_email_automatico'], PDO::PARAM_INT);
       $query->bindParam(":activo", $data['config_fe_activo'], PDO::PARAM_INT);
+      $query->bindParam(":permitir_ventas_simples", $data['config_fe_permitir_ventas_simples'], PDO::PARAM_INT);
 
       return $query->execute();
     } catch (PDOException $e) {

@@ -96,6 +96,7 @@ function cargarConfiguracion() {
           config.config_fe_enviar_email_automatico == 1,
         );
         $("#config_fe_activo").prop("checked", config.config_fe_activo == 1);
+        $("#config_fe_permitir_ventas_simples").prop("checked", config.config_fe_permitir_ventas_simples == 1);
       }
     },
     error: function () {

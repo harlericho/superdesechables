@@ -456,7 +456,13 @@ const app = new (function () {
           return;
         }
 
-        // ── Mostrar modal de progreso SRI ────────────────────────────────────────
+        const toggleSri = document.getElementById("toggleEnviarSri");
+        const enviarSri = toggleSri && toggleSri.checked ? 1 : 0;
+        form.set("es_factura_sri", enviarSri);
+
+        let timers = [];
+        if (enviarSri) {
+          // ── Mostrar modal de progreso SRI ────────────────────────────────────────
         const pasos = [
           {
             titulo: "Registrando venta...",
@@ -489,7 +495,6 @@ const app = new (function () {
             label: "Paso 5 de 5",
           },
         ];
-        const timers = [];
         let pasoActual = 0;
 
         const actualizarPaso = (idx) => {
@@ -508,11 +513,14 @@ const app = new (function () {
         delays.forEach((ms, i) => {
           timers.push(setTimeout(() => actualizarPaso(i + 1), ms));
         });
+        } // fin if (enviarSri)
 
         const cerrarModal = () => {
-          timers.forEach(clearTimeout);
-          document.getElementById("sriProgressBar").style.width = "100%";
-          setTimeout(() => $("#modalSriProceso").modal("hide"), 350);
+          if (enviarSri) {
+            timers.forEach(clearTimeout);
+            document.getElementById("sriProgressBar").style.width = "100%";
+            setTimeout(() => $("#modalSriProceso").modal("hide"), 350);
+          }
         };
         // ── Fin modal progreso ───────────────────────────────────────────────────
 
@@ -668,13 +676,26 @@ const app = new (function () {
       return "¿Estás seguro que deseas salir de la actual página?";
     };
   };
-  this.mostrarSerieFactura = () => {
-    fetch("../controllers/configserie/configserieMostrarSerieController.php", {
+  this.mostrarSerieFactura = (tipo = 'FACTURA') => {
+    fetch("../controllers/configserie/configserieMostrarSerieController.php?tipo=" + tipo, {
       method: "GET",
     })
       .then((res) => res.json())
       .then((data) => {
         this.numeroFactura.value = data;
+      })
+      .catch((err) => console.log(err));
+  };
+
+  this.cargarConfiguracionFE = () => {
+    fetch("../controllers/facturacion_electronica/feConfigObtenerController.php")
+      .then((res) => res.json())
+      .then((resData) => {
+        if (resData.status === 1 && resData.data) {
+          if (resData.data.config_fe_permitir_ventas_simples == 1) {
+            document.getElementById("containerToggleSri").style.display = "block";
+          }
+        }
       })
       .catch((err) => console.log(err));
   };
@@ -707,9 +728,10 @@ const app = new (function () {
       });
   };
 })();
+app.cargarConfiguracionFE();
 app.listadoClientes();
 app.listadoComprobante();
-app.mostrarSerieFactura();
+app.mostrarSerieFactura('FACTURA');
 app.cargarImpuestoActivo();
 app.listadoDetalles();
 // Recalcular total cuando se modifica manualmente el porcentaje de impuesto
@@ -731,6 +753,13 @@ document
   .getElementById("toggleIncluyeIva")
   .addEventListener("change", function () {
     app.calcularTotal();
+  });
+
+document
+  .getElementById("toggleEnviarSri")
+  .addEventListener("change", function () {
+    const tipo = this.checked ? 'FACTURA' : 'TICKET';
+    app.mostrarSerieFactura(tipo);
   });
 
 //app.recargar();

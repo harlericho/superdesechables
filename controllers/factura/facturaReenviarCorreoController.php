@@ -258,7 +258,9 @@ if ($sriAutorizado) {
   $xmlParaEmail = $xmlRaw ?: null;
 }
 
-if (!$sriAutorizado) {
+$esTicket = strpos($facturaComprobante, 'TK') !== false;
+
+if (!$sriAutorizado && !$esTicket) {
   echo json_encode(['success' => false, 'message' => 'La factura no está autorizada por el SRI. No se envió el correo.']);
   exit;
 }

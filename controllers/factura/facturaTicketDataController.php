@@ -84,7 +84,12 @@ $ticket .= "\n";
 $ticket .= "\x1B\x61\x00"; // ESC a 0 - Alinear a la izquierda
 
 // Encabezado de recibo
-$ticket .= txtL("No. Factura:", 12) . $factura['numero'] . "\n";
+if (strpos($factura['numero'], 'TK') !== false) {
+  $ticket .= "NOTA DE VENTA\n";
+  $ticket .= txtL("No.:", 12) . $factura['numero'] . "\n";
+} else {
+  $ticket .= txtL("No. Factura:", 12) . $factura['numero'] . "\n";
+}
 $ticket .= txtL("Fecha:", 12) . date('d/m/Y', strtotime($factura['fecha'])) . "\n";
 
 // Cliente

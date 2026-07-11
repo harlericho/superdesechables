@@ -40,7 +40,8 @@ try {
     'config_fe_email_envio' => $_POST['config_fe_email_envio'] ?? $config['config_fe_email_envio'],
     'config_fe_email_copia' => $_POST['config_fe_email_copia'] ?? $config['config_fe_email_copia'],
     'config_fe_enviar_email_automatico' => isset($_POST['config_fe_enviar_email_automatico']) ? 1 : 0,
-    'config_fe_activo' => isset($_POST['config_fe_activo']) ? 1 : 0
+    'config_fe_activo' => isset($_POST['config_fe_activo']) ? 1 : 0,
+    'config_fe_permitir_ventas_simples' => isset($_POST['config_fe_permitir_ventas_simples']) ? 1 : 0
   ];
 
   // Validar que si se activa FE, esté todo configurado

@@ -267,6 +267,17 @@ class FacturaModel
       echo $e->getMessage();
     }
   }
+  public static function aumentarSecuencialTicket()
+  {
+    try {
+      $sql = "UPDATE tbl_config_serie SET config_secuencial_ticket = config_secuencial_ticket + 1";
+      $query = Db::dbConnection()->prepare($sql);
+      $query->execute();
+      return true;
+    } catch (PDOException $e) {
+      echo $e->getMessage();
+    }
+  }
 
   // Obtener ventas agrupadas por mes para el gráfico
   public static function obtenerVentasMensuales()

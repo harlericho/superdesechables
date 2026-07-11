@@ -292,7 +292,14 @@
                           <input type="checkbox" id="config_fe_activo" name="config_fe_activo" value="1">
                           <strong class="text-success">Activar Facturación Electrónica</strong>
                         </label>
-                        <p class="text-muted">Al activar, todas las ventas generarán facturas electrónicas</p>
+                        <p class="text-muted">Al activar, todas las ventas generarán facturas electrónicas por defecto</p>
+                      </div>
+                      <div class="form-group">
+                        <label>
+                          <input type="checkbox" id="config_fe_permitir_ventas_simples" name="config_fe_permitir_ventas_simples" value="1">
+                          <strong class="text-info">Permitir Emitir Ventas Internas (Sin SRI)</strong>
+                        </label>
+                        <p class="text-muted">Si se activa, el cajero podrá decidir no enviar la venta al SRI (generando solo un Ticket interno)</p>
                       </div>
                     </div>
                   </div>

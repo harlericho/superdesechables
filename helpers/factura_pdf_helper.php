@@ -207,7 +207,8 @@ function construirFacturaPdf(array $detallesFactura, ?array $facturaElectronica)
   facturaPdfLV($pdf, 'R.U.C.: ', $empresa['ruc'], 18, $wDer - 24, 5, 8, 8, 1, 'R');
   $pdf->SetX($xDer);
   $pdf->SetFont('Arial', 'B', 15);
-  $pdf->Cell($wDer, 7, 'FACTURA', 0, 2, 'C');
+  $tituloRecibo = (strpos($facturaComprobante, 'TK') !== false) ? 'TICKET / NOTA DE VENTA' : 'FACTURA';
+  $pdf->Cell($wDer, 7, $tituloRecibo, 0, 2, 'C');
 
   if ($tieneFE) {
     $estadoSRI = $facturaElectronica['fe_estado_sri'] ?? 'PENDIENTE';
@@ -224,6 +225,7 @@ function construirFacturaPdf(array $detallesFactura, ?array $facturaElectronica)
     $pdf->Cell($wDer - 27, 5, utf8_decode($estadoSRI), 0, 2, 'L');
     $pdf->SetTextColor(0, 0, 0);
   }
+  
   $pdf->SetX($xDer + 3);
   $pdf->SetFont('Arial', 'B', 9);
   $pdf->Cell($wDer - 6, 5, 'No. ' . $facturaComprobante, 0, 2, 'L');
@@ -251,9 +253,14 @@ function construirFacturaPdf(array $detallesFactura, ?array $facturaElectronica)
     $pdf->Cell($wDer, 5, utf8_decode('CLAVE DE ACCESO'), 0, 2, 'C');
 
     $claveAcceso = $facturaElectronica['fe_clave_acceso'];
-    facturaPdfCode39($pdf, $xDer + 2, $pdf->GetY(), $claveAcceso, 0.115, 8);
-    $pdf->SetXY($xDer, $pdf->GetY() + 9);
-    $pdf->SetFont('Arial', '', 6);
+    // Dar un poco de margen para que se vea más centrado y estético
+    $narrow = 0.26; 
+    $barcodeWidth = 332 * $narrow; // ~86.32 mm
+    $offsetX = ($wDer - $barcodeWidth) / 2;
+    
+    facturaPdfCode128($pdf, $xDer + $offsetX, $pdf->GetY() + 1, $claveAcceso, $narrow, 12);
+    $pdf->SetXY($xDer, $pdf->GetY() + 14);
+    $pdf->SetFont('Arial', '', 7);
     $pdf->Cell($wDer, 3, $claveAcceso, 0, 1, 'C');
   }
   $alturaDer = ($pdf->GetY() + 2) - $yTop;
@@ -456,4 +463,55 @@ function construirFacturaPdf(array $detallesFactura, ?array $facturaElectronica)
   $pdf->MultiCell(0, 6, utf8_decode("El cliente se compromete a pagar la factura en su totalidad en la fecha establecida.\nCopyright@: ") . utf8_decode($empresa['nombre']), 0, 'C');
 
   return $pdf;
+}
+
+// Generador compacto de Code 128 optimizado para claves de acceso SRI (49 dígitos)
+function facturaPdfCode128($pdf, $x, $y, $code, $narrow = 0.25, $height = 10)
+{
+  $T128 = [
+    "212222", "222122", "222221", "121223", "121322", "131222", "122213", "122312", "132212", "221213", 
+    "221312", "231212", "112232", "122132", "122231", "113222", "123122", "123221", "223211", "221132", 
+    "221231", "213212", "223112", "312131", "311222", "321122", "321221", "312212", "322112", "322211", 
+    "212123", "212321", "232121", "111323", "131123", "131321", "112313", "132113", "132311", "211313", 
+    "231113", "231311", "112133", "112331", "132131", "113123", "113321", "133121", "313121", "211331", 
+    "231131", "213113", "213311", "213131", "311123", "311321", "331121", "312113", "312311", "332111", 
+    "314111", "221411", "431111", "111224", "111422", "121124", "121421", "141122", "141221", "112214", 
+    "112412", "122114", "122411", "142112", "142211", "241211", "221114", "413111", "241112", "134111", 
+    "111242", "121142", "121241", "114212", "124112", "124211", "411212", "421112", "421211", "212141", 
+    "214121", "412121", "111143", "111341", "131141", "114113", "114311", "411113", "411311", "113141", 
+    "114131", "311141", "411131", "211412", "211214", "211232", "2331112"
+  ];
+  
+  $indices = [104]; // START B
+  if (strlen($code) == 49) {
+    $indices[] = intval($code[0]) + 16; // Primer dígito en Code B
+    $indices[] = 99; // Cambiar a Code C
+    for ($i = 1; $i < 49; $i += 2) {
+      $indices[] = intval(substr($code, $i, 2));
+    }
+  } else {
+    // Fallback: Todo en Code B (Menos eficiente pero seguro)
+    for ($i = 0; $i < strlen($code); $i++) {
+      $indices[] = ord($code[$i]) - 32;
+    }
+  }
+  
+  $checksum = $indices[0];
+  for ($i = 1; $i < count($indices); $i++) {
+    $checksum += $indices[$i] * $i;
+  }
+  $indices[] = $checksum % 103;
+  $indices[] = 106; // STOP
+  
+  $pdf->SetFillColor(0, 0, 0);
+  foreach ($indices as $idx) {
+    $pattern = $T128[$idx];
+    for ($j = 0; $j < strlen($pattern); $j++) {
+      $wBar = intval($pattern[$j]) * $narrow;
+      if ($j % 2 == 0) {
+        $pdf->Rect($x, $y, $wBar, $height, 'F');
+      }
+      $x += $wBar;
+    }
+  }
 }

@@ -71,7 +71,11 @@ function imprimirTicketPOS($facturaId, $usuarioId = null)
         // Volver a alineación izquierda para el resto del ticket
         $ticket .= "\x1B\x61\x00"; // ESC a 0 - Align LEFT
 
-        $ticket .= txtL("Recibo:", 12) . $factura['numero'] . "\n";
+        if (strpos($factura['numero'], 'TK') !== false) {
+            $ticket .= "NOTA DE VENTA\n";
+        } else {
+            $ticket .= txtL("Factura:", 12) . $factura['numero'] . "\n";
+        }
         $ticket .= txtL("Fecha:", 12) . date('d/m/Y', strtotime($factura['fecha'])) . "\n";
 
         // Cliente
@@ -250,11 +254,13 @@ if (FacturaModel::existeFacturaNumComprobante(strtolower($_POST['numero_factura'
             ProductoModel::actualizarProductoStockId($arrayStock);
         }
         if (TempModel::eliminarDatosTemp()) {
-            // FACTURACIÓN ELECTRÓNICA: Verificar si está activa
+            $es_factura_sri = isset($_POST['es_factura_sri']) ? intval($_POST['es_factura_sri']) : 1;
+            
+            // FACTURACIÓN ELECTRÓNICA: Verificar si está activa y si se solicitó
             $facturaElectronica = null;
             $configFE = FacturacionElectronicaModel::obtenerConfiguracionActiva();
 
-            if ($configFE) {
+            if ($configFE && $es_factura_sri === 1) {
                 try {
                     // Procesar factura electrónica automáticamente
                     $resultado = FacturacionElectronicaService::procesarFacturaElectronica(
@@ -292,7 +298,11 @@ if (FacturaModel::existeFacturaNumComprobante(strtolower($_POST['numero_factura'
             }
 
             // Incrementar el secuencial DESPUÉS de procesar la factura electrónica
-            FacturaModel::aumentarSecuencialSerie();
+            if ($es_factura_sri === 1) {
+                FacturaModel::aumentarSecuencialSerie();
+            } else {
+                FacturaModel::aumentarSecuencialTicket();
+            }
 
             // Imprimir ticket si está marcado el checkbox
             $ticketImpreso = false;

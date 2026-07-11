@@ -196,6 +196,18 @@
                     </small>
                   </div>
                 </div>
+                <div class="form-group col-md-6" id="containerToggleSri" style="display:none;">
+                  <label style="display:block;">&nbsp;</label>
+                  <div class="checkbox" style="margin-top:6px; border:1px solid #3c8dbc; border-radius:4px; padding:8px 12px; background:#e8f4f8;">
+                    <label>
+                      <input type="checkbox" id="toggleEnviarSri" checked>
+                      <strong>Enviar Factura al SRI</strong>
+                    </label>
+                    <small class="text-muted" style="display:block; margin-top:3px;">
+                      Si se apaga, generará una Venta Interna (Ticket) que NO irá al SRI.
+                    </small>
+                  </div>
+                </div>
                 <!-- agregar un checkbox que deiga imprimir ticket -->
                 <div class="form-group col-md-12">
                   <div class="checkbox">

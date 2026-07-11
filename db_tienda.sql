@@ -329,3 +329,15 @@ CREATE TABLE IF NOT EXISTS `tbl_cierre_caja` (
 -- Agregar columna de IVA a la tabla tbl_factura
 -- ALTER TABLE tbl_factura ADD COLUMN factura_iva DECIMAL(10,2) NOT NULL DEFAULT 0
 -- AFTER factura_descuento_global_porcentaje;
+
+--  la columna factura_incluye_iva en tbl_factura, que es la que usa el INSERT en facturaModel.php
+ALTER TABLE tbl_factura
+ADD COLUMN factura_incluye_iva TINYINT(1) NOT NULL DEFAULT 0 AFTER factura_impuesto;
+
+-- Configuración para permitir Ventas Internas (Sin SRI)
+ALTER TABLE `tbl_config_facturacion_electronica` 
+ADD COLUMN `config_fe_permitir_ventas_simples` TINYINT(1) NOT NULL DEFAULT 0;
+
+-- Secuencia independiente para los Tickets de Ventas Internas
+ALTER TABLE `tbl_config_serie` 
+ADD COLUMN `config_secuencial_ticket` INT(11) NOT NULL DEFAULT 1;

@@ -247,12 +247,12 @@ $pdfString = $pdf->Output('S', $nombreArchivo);
 ob_end_clean(); // Limpia el buffer de salida
 
 
-// Enviar correo solo si se recibe ?enviar=1 Y la factura electrónica está AUTORIZADA por el SRI
+// Enviar correo solo si se recibe ?enviar=1 Y la factura electrónica está AUTORIZADA por el SRI (o es Ticket)
+$esTicket = strpos($facturaComprobante, 'TK') !== false;
 $sriAutorizado = isset($facturaElectronica['fe_estado_sri']) && $facturaElectronica['fe_estado_sri'] === 'AUTORIZADO';
 
 // Solo enviar el PDF al correo si se recibe ?enviar=1
-
-if (isset($_GET['enviar']) && $_GET['enviar'] == '1' && !empty($clienteEmail) && $sriAutorizado) {
+if (isset($_GET['enviar']) && $_GET['enviar'] == '1' && !empty($clienteEmail) && ($sriAutorizado || $esTicket)) {
   $datosFactura = [
     'numero' => str_pad($facturaComprobante, 9, '0', STR_PAD_LEFT),
     'fecha' => $facturaFecha,
