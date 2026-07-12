@@ -57,7 +57,8 @@ try {
     'config_fe_email_envio' => $_POST['config_fe_email_envio'] ?? ($configActual['config_fe_email_envio'] ?? ''),
     'config_fe_email_copia' => $_POST['config_fe_email_copia'] ?? ($configActual['config_fe_email_copia'] ?? ''),
     'config_fe_enviar_email_automatico' => isset($_POST['config_fe_enviar_email_automatico']) ? 1 : ($configActual['config_fe_enviar_email_automatico'] ?? 0),
-    'config_fe_activo' => $configActual['config_fe_activo'] ?? 0
+    'config_fe_activo' => $configActual['config_fe_activo'] ?? 0,
+    'config_fe_permitir_ventas_simples' => $configActual['config_fe_permitir_ventas_simples'] ?? 0
   ];
 
   // Guardar
