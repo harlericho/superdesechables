@@ -392,3 +392,157 @@ function enviarFacturaPrueba() {
     }
   });
 }
+
+/* =========================================================================
+   MÓDULO DE COMPROBANTES PENDIENTES
+   ========================================================================= */
+
+let tablaPendientes;
+
+function cargarPendientes() {
+  if (tablaPendientes) {
+    tablaPendientes.ajax.reload();
+  } else {
+    tablaPendientes = $('#tablaPendientes').DataTable({
+      "ajax": {
+        "url": "../controllers/facturacion_electronica/fePendientesListarController.php",
+        "type": "POST"
+      },
+      "columns": [
+        { "data": "factura_id" },
+        { "data": "factura_num_comprobante" },
+        { "data": "cliente" },
+        { "data": "factura_fecha" },
+        { "data": "factura_total", "render": function(data) { return "$" + parseFloat(data).toFixed(2); } },
+        { "data": "fe_estado_sri", "render": function(data) {
+            let labelClass = 'warning';
+            if (data === 'ERROR' || data === 'DEVUELTA') labelClass = 'danger';
+            return '<span class="label label-' + labelClass + '">' + (data ? data : 'PENDIENTE') + '</span>';
+        }},
+        { "data": "fe_mensaje_sri", "render": function(data) {
+            return data ? '<small>' + data + '</small>' : '';
+        }},
+        { "data": "factura_id", "render": function(data, type, row) {
+            return '<button class="btn btn-primary btn-sm" onclick="reintentarFactura(' + data + ')"><i class="fa fa-refresh"></i> Reintentar</button>';
+        }}
+      ],
+      "language": {
+        "url": "https://cdn.datatables.net/plug-ins/1.10.20/i18n/Spanish.json"
+      }
+    });
+  }
+}
+
+// Cargar pendientes cuando se haga click en la pestaña
+$('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+  var target = $(e.target).attr("href");
+  if (target === '#pendientes') {
+    cargarPendientes();
+  }
+});
+
+function reintentarFactura(id) {
+  swal({
+    title: "¿Reintentar factura?",
+    text: "Se intentará enviar y autorizar nuevamente la factura con el SRI.",
+    icon: "info",
+    buttons: true,
+  }).then((willTry) => {
+    if (willTry) {
+      swal({
+        title: "Procesando...",
+        text: "Por favor espere, conectando con el SRI...",
+        icon: "info",
+        buttons: false,
+        closeOnClickOutside: false
+      });
+
+      $.ajax({
+        url: "../controllers/facturacion_electronica/feReintentarController.php",
+        method: "POST",
+        data: { factura_id: id },
+        dataType: "json",
+        success: function(res) {
+          if (res.status === 1) {
+            swal("¡Éxito!", "Factura autorizada correctamente y enviada al cliente.", "success");
+            cargarPendientes();
+          } else {
+            swal("Error", res.message || "No se pudo autorizar la factura", "error");
+            cargarPendientes();
+          }
+        },
+        error: function() {
+          swal("Error", "Error de red al intentar reintentar", "error");
+        }
+      });
+    }
+  });
+}
+
+function reintentarTodas() {
+  if (!tablaPendientes) return;
+  const pendientes = tablaPendientes.rows().data().toArray();
+  
+  if (pendientes.length === 0) {
+    swal("Atención", "No hay facturas pendientes para reintentar.", "warning");
+    return;
+  }
+
+  swal({
+    title: "¿Reintentar " + pendientes.length + " facturas?",
+    text: "El proceso se hará de manera individual para evitar bloqueos del sistema. Por favor no cierre la ventana hasta que finalice.",
+    icon: "warning",
+    buttons: true,
+  }).then((willTry) => {
+    if (willTry) {
+      $('#modalReintentoMasivo').modal('show');
+      $('#btnCerrarReintento').hide();
+      
+      let index = 0;
+      let exitosas = 0;
+      let fallidas = 0;
+      
+      const procesarSiguiente = () => {
+        if (index >= pendientes.length) {
+          // Terminado
+          $('#reintentoBarra').css('width', '100%');
+          $('#reintentoTexto').text("Proceso finalizado.");
+          $('#reintentoDetalle').html("<b>Resultados:</b> " + exitosas + " autorizadas, " + fallidas + " fallidas.");
+          $('#reintentoBarra').removeClass('active progress-bar-striped progress-bar-warning').addClass('progress-bar-success');
+          $('#btnCerrarReintento').show();
+          cargarPendientes();
+          return;
+        }
+
+        const fact = pendientes[index];
+        const pct = Math.round((index / pendientes.length) * 100);
+        
+        $('#reintentoBarra').css('width', pct + '%');
+        $('#reintentoTexto').text("Procesando factura " + fact.factura_num_comprobante + " (" + (index+1) + " de " + pendientes.length + ")");
+        $('#reintentoDetalle').text("Conectando con el SRI para el cliente: " + fact.cliente);
+
+        $.ajax({
+          url: "../controllers/facturacion_electronica/feReintentarController.php",
+          method: "POST",
+          data: { factura_id: fact.factura_id },
+          dataType: "json",
+          success: function(res) {
+            if (res.status === 1) exitosas++;
+            else fallidas++;
+            
+            index++;
+            procesarSiguiente();
+          },
+          error: function() {
+            fallidas++;
+            index++;
+            procesarSiguiente();
+          }
+        });
+      };
+      
+      // Iniciar bucle
+      procesarSiguiente();
+    }
+  });
+}

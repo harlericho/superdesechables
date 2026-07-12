@@ -636,4 +636,126 @@ class FacturacionElectronicaService
       ];
     }
   }
+
+  /**
+   * Reintentar factura electrónica (Mantiene secuencial guardado)
+   * 
+   * @param int $facturaId ID de la factura
+   * @param int $usuarioId ID del usuario
+   * @return array Resultado
+   */
+  public static function reintentarFactura($facturaId, $usuarioId = 1)
+  {
+    set_time_limit(120);
+    ignore_user_abort(true);
+    try {
+      $config = FacturacionElectronicaModel::obtenerConfiguracionActiva();
+      if (!$config || $config['config_fe_activo'] != 1) {
+        throw new Exception('Facturación electrónica no está activa');
+      }
+
+      $factura = self::obtenerDatosFactura($facturaId);
+      if (!$factura) throw new Exception('Factura no encontrada');
+
+      $detalles = self::obtenerDetallesConProductos($facturaId);
+      if (empty($detalles)) throw new Exception('No se encontraron detalles para la factura');
+
+      $fecha = date('dmY', strtotime($factura['factura_fecha']));
+      $tipoComprobante = '01'; // Factura
+      $ambiente = $config['config_fe_ambiente'] == 'PRUEBAS' ? '1' : '2';
+      $serie = $config['config_fe_cod_establecimiento'] . $config['config_fe_cod_punto_emision'];
+      
+      // EXTRAER SECUENCIAL YA GUARDADO
+      $partesComprobante = explode('-', $factura['factura_num_comprobante']);
+      if (count($partesComprobante) === 3) {
+        $secuencial = $partesComprobante[2];
+      } else {
+        $secuencial = str_pad((int)preg_replace('/[^0-9]/', '', $factura['factura_num_comprobante']), 9, '0', STR_PAD_LEFT);
+      }
+      
+      $codigoNumerico = FacturacionElectronicaHelper::generarCodigoNumerico();
+      $tipoEmision = $config['config_fe_tipo_emision'] == 'NORMAL' ? '1' : '2';
+
+      $claveAcceso = FacturacionElectronicaHelper::generarClaveAcceso(
+        $fecha, $tipoComprobante, $config['config_fe_ruc'], $ambiente,
+        $serie, $secuencial, $codigoNumerico, $tipoEmision
+      );
+
+      $numeroComprobante = $serie . '-' . $secuencial;
+
+      $query = Db::dbConnection()->prepare("SELECT * FROM tbl_factura_electronica WHERE factura_id = ? ORDER BY factura_electronica_id DESC LIMIT 1");
+      $query->execute([$facturaId]);
+      $feRecord = $query->fetch(PDO::FETCH_ASSOC);
+
+      if (!$feRecord) {
+        // En caso extremadamente raro de que no exista el registro, creamos uno básico
+        $facturaElectronicaId = FacturacionElectronicaModel::guardarFacturaElectronica([
+          'factura_id' => $facturaId,
+          'fe_clave_acceso' => $claveAcceso,
+          'fe_estado_sri' => 'PENDIENTE',
+          'fe_ambiente' => $config['config_fe_ambiente'],
+          'fe_tipo_emision' => $config['config_fe_tipo_emision'],
+          'fe_mensaje_sri' => 'Reintento iniciado'
+        ]);
+      } else {
+        $facturaElectronicaId = $feRecord['factura_electronica_id'];
+        FacturacionElectronicaModel::actualizarEstadoSRI($facturaElectronicaId, [
+          'fe_clave_acceso' => $claveAcceso,
+          'fe_estado_sri' => 'PENDIENTE',
+          'fe_mensaje_sri' => 'Reintento generado, enviando a SRI...'
+        ]);
+      }
+
+      // 6. Preparar datos para XML
+      $datosFactura = self::prepararDatosFactura($factura, $detalles, $config, $claveAcceso, $secuencial, $numeroComprobante);
+
+      // 7. Generar XML
+      $xml = FacturacionElectronicaHelper::generarXMLFactura($datosFactura, $config);
+
+      // 8. Firmar XML
+      $xmlFirmado = null;
+      if (!empty($config['config_fe_certificado_digital'])) {
+        require_once __DIR__ . '/../config/encryption.php';
+        $passwordCertificado = Encryption::_desencryptacion($config['config_fe_certificado_password']);
+        $xmlFirmado = FacturacionElectronicaHelper::firmarXML(
+          $xml,
+          $config['config_fe_certificado_digital'],
+          $passwordCertificado
+        );
+
+        if (!$xmlFirmado) {
+          throw new Exception('Error al firmar el XML en el reintento');
+        }
+      }
+
+      if ($xmlFirmado) {
+        FacturacionElectronicaModel::actualizarEstadoSRI($facturaElectronicaId, [
+          'fe_xml_firmado' => $xmlFirmado
+        ]);
+      }
+
+      $resultadoSRI = self::enviarAlSRI($xmlFirmado, $config, $facturaElectronicaId);
+
+      FacturacionElectronicaModel::registrarLog(
+        $facturaElectronicaId, 'SUCCESS', 'REINTENTO_FACTURA', 'Factura electrónica reintentada',
+        json_encode(['clave_acceso' => $claveAcceso, 'numero' => $numeroComprobante]), $usuarioId
+      );
+
+      $estadoSRI = $resultadoSRI['estado'] ?? 'PENDIENTE';
+      return [
+        'success' => true,
+        'clave_acceso' => $claveAcceso,
+        'numero_comprobante' => $numeroComprobante,
+        'estado_sri' => $estadoSRI,
+        'autorizado' => ($estadoSRI === 'AUTORIZADO'),
+        'mensaje' => 'Factura reintentada correctamente'
+      ];
+    } catch (Exception $e) {
+      error_log("Error en Reintento FE: " . $e->getMessage());
+      if (isset($facturaElectronicaId)) {
+        FacturacionElectronicaModel::registrarLog($facturaElectronicaId, 'ERROR', 'ERROR_REINTENTO', $e->getMessage(), null, $usuarioId ?? null);
+      }
+      return ['success' => false, 'error' => $e->getMessage()];
+    }
+  }
 }

@@ -35,6 +35,9 @@
               <li><a href="#pruebas" data-toggle="tab">
                   <i class="fa fa-flask"></i> Pruebas</a>
               </li>
+              <li><a href="#pendientes" data-toggle="tab">
+                  <i class="fa fa-exclamation-triangle"></i> Comprobantes Pendientes</a>
+              </li>
             </ul>
 
             <div class="tab-content">
@@ -352,11 +355,69 @@ Aquí aparecerán los resultados...
                   </div>
                 </div>
               </div>
+
+              <!-- TAB 5: COMPROBANTES PENDIENTES -->
+              <div class="tab-pane" id="pendientes">
+                <div class="callout callout-warning">
+                  <h4><i class="fa fa-warning"></i> Comprobantes No Autorizados</h4>
+                  <p>Aquí se listan las facturas que no pudieron ser enviadas o autorizadas por el SRI debido a caídas del sistema, intermitencias o errores en los datos (como RUC incorrecto).</p>
+                </div>
+
+                <div class="row">
+                  <div class="col-md-12 text-right" style="margin-bottom: 15px;">
+                    <button type="button" class="btn btn-warning" id="btnReintentarTodas" onclick="reintentarTodas()">
+                      <i class="fa fa-refresh"></i> Reintentar Todas las Pendientes
+                    </button>
+                  </div>
+                </div>
+
+                <div class="table-responsive">
+                  <table id="tablaPendientes" class="table table-bordered table-striped" width="100%">
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Factura</th>
+                        <th>Cliente</th>
+                        <th>Fecha</th>
+                        <th>Total</th>
+                        <th>Estado SRI</th>
+                        <th>Mensaje SRI</th>
+                        <th>Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <!-- Cargado por AJAX -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </section>
+  </div>
+
+  <!-- Modal Progreso Reintento Masivo -->
+  <div class="modal fade" id="modalReintentoMasivo" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">Reintentando Facturas Pendientes</h4>
+        </div>
+        <div class="modal-body">
+          <p id="reintentoTexto">Preparando...</p>
+          <div class="progress progress-sm active">
+            <div class="progress-bar progress-bar-warning progress-bar-striped" id="reintentoBarra" role="progressbar" style="width: 0%">
+            </div>
+          </div>
+          <p id="reintentoDetalle" class="text-muted" style="margin-top: 10px; font-size: 12px;"></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal" id="btnCerrarReintento" style="display:none;">Cerrar</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <?php include_once '../templates/footer.php'; ?>

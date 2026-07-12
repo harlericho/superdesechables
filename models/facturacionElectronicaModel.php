@@ -317,11 +317,20 @@ class FacturacionElectronicaModel
   {
     try {
       $setClauses = [
-        'fe_estado_sri = :estado_sri',
         'fe_intentos_envio = fe_intentos_envio + 1',
         'fe_fecha_envio_sri = NOW()'
       ];
-      $params = [':estado_sri' => $data['fe_estado_sri'], ':id' => $facturaElectronicaId];
+      $params = [':id' => $facturaElectronicaId];
+
+      if (array_key_exists('fe_estado_sri', $data)) {
+        $setClauses[] = 'fe_estado_sri = :estado_sri';
+        $params[':estado_sri'] = $data['fe_estado_sri'];
+      }
+      
+      if (array_key_exists('fe_clave_acceso', $data)) {
+        $setClauses[] = 'fe_clave_acceso = :clave_acceso';
+        $params[':clave_acceso'] = $data['fe_clave_acceso'];
+      }
 
       if (array_key_exists('fe_xml_firmado', $data)) {
         $setClauses[] = 'fe_xml_firmado = :xml_firmado';
