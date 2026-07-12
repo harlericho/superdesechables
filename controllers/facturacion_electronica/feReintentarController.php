@@ -29,7 +29,13 @@ try {
     $cliente = $stmt->fetch(PDO::FETCH_ASSOC);
     $correoCliente = $cliente ? $cliente['cliente_email'] : '';
 
-    $url = "http://" . $_SERVER['HTTP_HOST'] . "/superdesechables/controllers/factura/facturaReenviarCorreoController.php";
+    // Construir la URL dinámicamente para que funcione tanto en localhost como en producción
+    $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? "https" : "http";
+    $host = $_SERVER['HTTP_HOST'];
+    $requestUri = $_SERVER['REQUEST_URI'];
+    $baseUri = explode('/controllers/facturacion_electronica', $requestUri)[0];
+    
+    $url = $protocol . "://" . $host . $baseUri . "/controllers/factura/facturaReenviarCorreoController.php";
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_POST, 1);
