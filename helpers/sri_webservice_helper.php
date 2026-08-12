@@ -200,6 +200,7 @@ class SriWebServiceHelper
 </soapenv:Envelope>';
 
       $respuestaRaw = self::curlSoap($endpoint, $soapEnvelope);
+      file_put_contents('test_sri_raw.xml', $respuestaRaw);
 
       // Extraer estado de la autorización usando regex (más robusto con namespaces)
       preg_match('/<estado>([^<]+)<\/estado>/', $respuestaRaw, $mEstado);
@@ -299,7 +300,20 @@ class SriWebServiceHelper
     // 1. Enviar comprobante
     $resultadoEnvio = self::enviarComprobante($xmlFirmado, $ambiente);
 
-    if (!$resultadoEnvio['success']) {
+    // Si el comprobante ya fue recibido previamente (el SRI devuelve error de clave registrada o secuencial registrado),
+    // entonces podemos obviar el error de envío y saltar a consultar autorización.
+    $yaRecibidoPrevio = false;
+    if (!$resultadoEnvio['success'] && !empty($resultadoEnvio['detalles'])) {
+      foreach ($resultadoEnvio['detalles'] as $detalle) {
+        $msg = strtoupper($detalle['mensaje']);
+        if ($detalle['identificador'] == '43' || strpos($msg, 'REGISTRAD') !== false) {
+          $yaRecibidoPrevio = true;
+          break;
+        }
+      }
+    }
+
+    if (!$resultadoEnvio['success'] && !$yaRecibidoPrevio) {
       return [
         'success'       => false,
         'autorizado'    => false,

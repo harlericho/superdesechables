@@ -673,19 +673,23 @@ class FacturacionElectronicaService
         $secuencial = str_pad((int)preg_replace('/[^0-9]/', '', $factura['factura_num_comprobante']), 9, '0', STR_PAD_LEFT);
       }
       
-      $codigoNumerico = FacturacionElectronicaHelper::generarCodigoNumerico();
-      $tipoEmision = $config['config_fe_tipo_emision'] == 'NORMAL' ? '1' : '2';
-
-      $claveAcceso = FacturacionElectronicaHelper::generarClaveAcceso(
-        $fecha, $tipoComprobante, $config['config_fe_ruc'], $ambiente,
-        $serie, $secuencial, $codigoNumerico, $tipoEmision
-      );
-
-      $numeroComprobante = $serie . '-' . $secuencial;
-
       $query = Db::dbConnection()->prepare("SELECT * FROM tbl_factura_electronica WHERE factura_id = ? ORDER BY factura_electronica_id DESC LIMIT 1");
       $query->execute([$facturaId]);
       $feRecord = $query->fetch(PDO::FETCH_ASSOC);
+
+      if ($feRecord && !empty($feRecord['fe_clave_acceso'])) {
+        $claveAcceso = $feRecord['fe_clave_acceso'];
+      } else {
+        $codigoNumerico = FacturacionElectronicaHelper::generarCodigoNumerico();
+        $tipoEmision = $config['config_fe_tipo_emision'] == 'NORMAL' ? '1' : '2';
+
+        $claveAcceso = FacturacionElectronicaHelper::generarClaveAcceso(
+          $fecha, $tipoComprobante, $config['config_fe_ruc'], $ambiente,
+          $serie, $secuencial, $codigoNumerico, $tipoEmision
+        );
+      }
+
+      $numeroComprobante = $serie . '-' . $secuencial;
 
       if (!$feRecord) {
         // En caso extremadamente raro de que no exista el registro, creamos uno básico
