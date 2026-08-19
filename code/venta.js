@@ -185,6 +185,35 @@ const app = new (function () {
       })
       .catch((err) => console.log(err));
   };
+  this.eliminarTodo = () => {
+    // Verificar si hay productos en el detalle
+    if (!this._detallesData || this._detallesData.length === 0) {
+      swal("Atención!", "No hay productos para eliminar", "info");
+      return;
+    }
+
+    swal({
+      title: "¿Eliminar todos los productos?",
+      text: "Se eliminarán todos los productos del detalle de venta",
+      icon: "warning",
+      buttons: ["Cancelar", "Sí, eliminar todo"],
+      dangerMode: true,
+    }).then((confirmar) => {
+      if (confirmar) {
+        fetch("../controllers/venta/ventaDetalleLimpiarTodoController.php", {
+          method: "POST",
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data === 1) {
+              swal("Eliminado!", "Todos los productos fueron eliminados", "success");
+              this.listadoDetalles();
+            }
+          })
+          .catch((err) => console.log(err));
+      }
+    });
+  };
   this.listadoClientes = (clienteIdSeleccionar = null) => {
     fetch("../controllers/cliente/clienteListadoController.php", {
       method: "GET",

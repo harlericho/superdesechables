@@ -237,6 +237,11 @@
           <div class="box box-primary">
             <div class="box-header with-border">
               <h3 class="box-title">Detalle productos</h3>
+              <div class="box-tools pull-right">
+                <button type="button" class="btn btn-danger btn-sm" onclick="app.eliminarTodo()" title="Eliminar todos los productos">
+                  <i class="fa fa-trash"></i> Limpiar todo
+                </button>
+              </div>
             </div>
             <div class="box-body">
               <div class="table table-responsive">
