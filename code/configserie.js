@@ -4,6 +4,7 @@ const app = new (function () {
   this.primera_serie = document.getElementsByName("primera_serie")[0];
   this.segunda_serie = document.getElementsByName("segunda_serie")[0];
   this.secuencial = document.getElementsByName("secuencial")[0];
+  this.secuencial_ticket = document.getElementsByName("secuencial_ticket")[0];
   this.listado = () => {
     fetch("../controllers/configserie/configserieListadoController.php", {
       method: "GET",
@@ -16,7 +17,7 @@ const app = new (function () {
           html += "<thead>";
           html += "<tr>";
           html +=
-            "<th>Primera serie</th><th>Segunda serie</th><th>Secuencial</th><th style='width: 40px' colpsan='2'>Accciones</th>";
+            "<th>Primera serie</th><th>Segunda serie</th><th>Secuencial Factura</th><th>Secuencial Ticket</th><th style='width: 40px' colpsan='2'>Accciones</th>";
           html += "</tr>";
           html += "</thead>";
           html += "<tbody>";
@@ -26,6 +27,7 @@ const app = new (function () {
               "<td> <strong>" + element.config_primera_serie + "</strong></td>";
             html += "<td> <strong>" + element.config_segunda_serie + "</td>";
             html += "<td> <strong>" + element.config_secuencial + "</td>";
+            html += "<td> <strong>" + (element.config_secuencial_ticket || 1) + "</td>";
             html +=
               "<td><button type='button' class='btn btn-info btn-sm' title='Editar' onClick='app.editar(" +
               element.config_id +
@@ -135,6 +137,7 @@ const app = new (function () {
         this.primera_serie.value = data[0]["primera_serie"];
         this.segunda_serie.value = data[0]["segunda_serie"];
         this.secuencial.value = data[0]["secuencial"];
+        this.secuencial_ticket.value = data[0]["secuencial_ticket"] || 1;
         this.id.value = data[0]["id"];
         swal("Atención!", "Esta en el modo actualizar datos", "warning");
       })

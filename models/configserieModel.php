@@ -27,7 +27,8 @@ class ConfigserieModel
         'id' => $row['config_id'],
         'primera_serie' => $row['config_primera_serie'],
         'segunda_serie' => $row['config_segunda_serie'],
-        'secuencial' => ltrim($row['config_secuencial'], '0')
+        'secuencial' => ltrim($row['config_secuencial'], '0'),
+        'secuencial_ticket' => isset($row['config_secuencial_ticket']) ? ltrim($row['config_secuencial_ticket'], '0') : '1'
       );
       return $json;
     } catch (PDOException $e) {
@@ -61,11 +62,12 @@ class ConfigserieModel
   public static function actualizarConfigSerie($data)
   {
     try {
-      $sql = "UPDATE tbl_config_serie SET config_primera_serie = :primera_serie, config_segunda_serie = :segunda_serie, config_secuencial = :secuencial WHERE config_id = :id";
+      $sql = "UPDATE tbl_config_serie SET config_primera_serie = :primera_serie, config_segunda_serie = :segunda_serie, config_secuencial = :secuencial, config_secuencial_ticket = :secuencial_ticket WHERE config_id = :id";
       $query = Db::dbConnection()->prepare($sql);
       $query->bindParam(':primera_serie', $data['primera_serie'], PDO::PARAM_STR);
       $query->bindParam(':segunda_serie', $data['segunda_serie'], PDO::PARAM_STR);
       $query->bindParam(':secuencial', $data['secuencial'], PDO::PARAM_STR);
+      $query->bindParam(':secuencial_ticket', $data['secuencial_ticket'], PDO::PARAM_STR);
       $query->bindParam(':id', $data['id'], PDO::PARAM_INT);
       return $query->execute();
     } catch (PDOException $e) {

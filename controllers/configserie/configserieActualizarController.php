@@ -5,6 +5,7 @@ $arrayName = array(
   'primera_serie' => $_POST['primera_serie'],
   'segunda_serie' => $_POST['segunda_serie'],
   'secuencial' => $_POST['secuencial'],
+  'secuencial_ticket' => $_POST['secuencial_ticket'],
   // 'secuencial' =>  str_pad($_POST['secuencial'], 9, "0", STR_PAD_LEFT),
   'id' => $_POST['id']
 );

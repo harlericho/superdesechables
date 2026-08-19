@@ -53,10 +53,17 @@
                     </div>
                   </div>
                   <div class="form-group">
-                    <label for="nombres">Secuencial</label>
+                    <label for="nombres">Secuencial Factura</label>
                     <div class="input-group">
                       <span class="input-group-addon"><i class="fa fa-sort-numeric-asc"></i></span>
                       <input type="text" class="form-control" name="secuencial" placeholder="1" required>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="secuencial_ticket">Secuencial Ticket</label>
+                    <div class="input-group">
+                      <span class="input-group-addon"><i class="fa fa-ticket"></i></span>
+                      <input type="text" class="form-control" name="secuencial_ticket" placeholder="1" required>
                     </div>
                   </div>
                 </div>
@@ -74,7 +81,7 @@
             <!-- general form elements -->
             <div class="box box-success">
               <div class="box-header with-border">
-                <h3 class="box-title">Listado de serie factura</h3>
+                <h3 class="box-title">Listado de serie factura / ticket</h3>
               </div>
               <div class="box-body">
                 <div id="tbody" class="table table-responsive">
