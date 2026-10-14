@@ -33,6 +33,7 @@ try {
     'config_fe_regimen_microempresa' => $config['config_fe_regimen_microempresa'],
     'config_fe_agente_retencion' => $config['config_fe_agente_retencion'],
     'config_fe_contribuyente_rimpe' => $config['config_fe_contribuyente_rimpe'],
+    'config_fe_ruc_proveedor' => $config['config_fe_ruc_proveedor'] ?? null,
     'config_fe_certificado_password' => $config['config_fe_certificado_password'],
     'config_fe_certificado_fecha_caducidad' => $config['config_fe_certificado_fecha_caducidad'],
     'config_fe_ambiente' => $_POST['config_fe_ambiente'] ?? $config['config_fe_ambiente'],

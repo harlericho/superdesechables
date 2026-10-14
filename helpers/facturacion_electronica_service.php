@@ -303,6 +303,10 @@ class FacturacionElectronicaService
     if (!empty($factura['cliente_telefono'])) {
       $datosFactura['informacion_adicional']['Telefono'] = $factura['cliente_telefono'];
     }
+    // RUC del proveedor exigido por el SRI como campo adicional (solo si está configurado)
+    if (!empty($config['config_fe_ruc_proveedor'])) {
+      $datosFactura['informacion_adicional']['RUC Proveedor'] = $config['config_fe_ruc_proveedor'];
+    }
 
     // Procesar detalles
     foreach ($detalles as $detalle) {

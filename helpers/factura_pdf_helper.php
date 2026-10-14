@@ -105,6 +105,7 @@ function facturaPdfObtenerEmpresaInfo()
       'obligado_contabilidad' => $config['config_fe_obligado_contabilidad'] ?? null,
       'ambiente' => $config['config_fe_ambiente'] ?? null,
       'contribuyente_rimpe' => $config['config_fe_contribuyente_rimpe'] ?? 'NO',
+      'ruc_proveedor' => $config['config_fe_ruc_proveedor'] ?? null,
     ];
   }
   return [
@@ -115,6 +116,7 @@ function facturaPdfObtenerEmpresaInfo()
     'obligado_contabilidad' => null,
     'ambiente' => null,
     'contribuyente_rimpe' => 'NO',
+    'ruc_proveedor' => null,
   ];
 }
 
@@ -442,6 +444,11 @@ function construirFacturaPdf(array $detallesFactura, ?array $facturaElectronica)
   $pdf->Cell($anchoIzq, 6, utf8_decode('INFORMACIÓN ADICIONAL'), 1, 1, 'C', true);
   $pdf->SetXY(12, $yBloque + 8);
   facturaPdfLV($pdf, 'Email Cliente: ', $clienteEmail, 28, $anchoIzq - 30, 5, 8, 8, 1);
+  // Solo en facturas electrónicas: en tickets / notas de venta no aplica el campo adicional del SRI
+  if ($tieneFE && !empty($empresa['ruc_proveedor'])) {
+    $pdf->SetX(12);
+    facturaPdfLV($pdf, 'RUC Proveedor: ', $empresa['ruc_proveedor'], 28, $anchoIzq - 30, 5, 8, 8, 1);
+  }
 
   // --- FORMA DE PAGO (debajo de información adicional) ---
   $yFormaPago = $yBloque + $altoTotales + 4;

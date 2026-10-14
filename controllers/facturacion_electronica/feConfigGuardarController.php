@@ -33,6 +33,16 @@ try {
     exit;
   }
 
+  // RUC del proveedor (opcional): si se informa debe tener 13 dígitos
+  $rucProveedor = trim($_POST['config_fe_ruc_proveedor'] ?? '');
+  if ($rucProveedor !== '' && !preg_match('/^\d{13}$/', $rucProveedor)) {
+    echo json_encode([
+      'status' => 0,
+      'message' => 'El RUC del proveedor debe tener 13 dígitos'
+    ]);
+    exit;
+  }
+
   // Este formulario (Tab "Datos del Emisor") no incluye los campos de certificado ni el
   // interruptor de activación (viven en otras pestañas/formularios). Se parte de la
   // configuración ya guardada para no pisarlos con valores en blanco/0 en cada guardado.
@@ -50,6 +60,7 @@ try {
     'config_fe_regimen_microempresa' => $_POST['config_fe_regimen_microempresa'] ?? 'NO',
     'config_fe_agente_retencion' => $_POST['config_fe_agente_retencion'] ?? 'NO',
     'config_fe_contribuyente_rimpe' => $_POST['config_fe_contribuyente_rimpe'] ?? 'NO',
+    'config_fe_ruc_proveedor' => $rucProveedor,
     'config_fe_certificado_password' => $configActual['config_fe_certificado_password'] ?? '',
     'config_fe_certificado_fecha_caducidad' => $configActual['config_fe_certificado_fecha_caducidad'] ?? null,
     'config_fe_ambiente' => $_POST['config_fe_ambiente'] ?? ($configActual['config_fe_ambiente'] ?? 'PRUEBAS'),

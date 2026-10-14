@@ -131,6 +131,16 @@
                         <small class="text-muted">Verifícalo en la Consulta RUC del portal del SRI (campo "Régimen"). Define el texto legal que se imprime en factura y XML.</small>
                       </div>
                     </div>
+
+                    <div class="col-md-3">
+                      <div class="form-group">
+                        <label>RUC Proveedor</label>
+                        <input type="text" class="form-control" id="config_fe_ruc_proveedor"
+                          name="config_fe_ruc_proveedor" maxlength="13" pattern="\d{13}"
+                          placeholder="13 dígitos">
+                        <small class="text-muted">Se envía como campo adicional "RUC Proveedor" en el XML y el PDF. Dejar en blanco si no aplica.</small>
+                      </div>
+                    </div>
                   </div>
 
                   <div class="row">

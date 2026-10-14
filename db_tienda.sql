@@ -341,3 +341,13 @@ ADD COLUMN `config_fe_permitir_ventas_simples` TINYINT(1) NOT NULL DEFAULT 0;
 -- Secuencia independiente para los Tickets de Ventas Internas
 ALTER TABLE `tbl_config_serie` 
 ADD COLUMN `config_secuencial_ticket` INT(11) NOT NULL DEFAULT 1;
+
+
+-- --------------------------------------------------------
+-- Migración: RUC de proveedor como campo adicional del XML (SRI)
+-- El SRI exige incluir este RUC como <campoAdicional nombre="RUC Proveedor">
+-- en infoAdicional. Es un valor fijo configurable (no quemado en código),
+-- editable desde la pestaña "Configuración" del módulo de FE.
+-- --------------------------------------------------------
+ALTER TABLE `tbl_config_facturacion_electronica`
+ADD COLUMN `config_fe_ruc_proveedor` varchar(13) COLLATE utf8_spanish_ci DEFAULT NULL COMMENT 'RUC del proveedor para campo adicional SRI' AFTER `config_fe_contribuyente_rimpe`;

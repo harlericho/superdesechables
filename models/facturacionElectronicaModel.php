@@ -83,6 +83,7 @@ class FacturacionElectronicaModel
                         config_fe_regimen_microempresa = :regimen_microempresa,
                         config_fe_agente_retencion = :agente_retencion,
                         config_fe_contribuyente_rimpe = :contribuyente_rimpe,
+                        config_fe_ruc_proveedor = :ruc_proveedor,
                         config_fe_certificado_password = :certificado_password,
                         config_fe_certificado_fecha_caducidad = :certificado_fecha_caducidad,
                         config_fe_ambiente = :ambiente,
@@ -100,6 +101,7 @@ class FacturacionElectronicaModel
                          config_fe_direccion_matriz, config_fe_direccion_sucursal, 
                          config_fe_obligado_contabilidad, config_fe_regimen_microempresa,
                          config_fe_agente_retencion, config_fe_contribuyente_rimpe,
+                         config_fe_ruc_proveedor,
                          config_fe_certificado_password, config_fe_certificado_fecha_caducidad,
                          config_fe_ambiente, config_fe_tipo_emision,
                          config_fe_email_envio, config_fe_email_copia, config_fe_enviar_email_automatico,
@@ -108,6 +110,7 @@ class FacturacionElectronicaModel
                                 :direccion_matriz, :direccion_sucursal,
                                 :obligado_contabilidad, :regimen_microempresa,
                                 :agente_retencion, :contribuyente_rimpe,
+                                :ruc_proveedor,
                                 :certificado_password, :certificado_fecha_caducidad,
                                 :ambiente, :tipo_emision,
                                 :email_envio, :email_copia, :enviar_email_automatico,
@@ -129,6 +132,8 @@ class FacturacionElectronicaModel
       $query->bindParam(":regimen_microempresa", $data['config_fe_regimen_microempresa'], PDO::PARAM_STR);
       $query->bindParam(":agente_retencion", $data['config_fe_agente_retencion'], PDO::PARAM_STR);
       $query->bindParam(":contribuyente_rimpe", $data['config_fe_contribuyente_rimpe'], PDO::PARAM_STR);
+      $rucProveedor = !empty($data['config_fe_ruc_proveedor']) ? $data['config_fe_ruc_proveedor'] : null;
+      $query->bindParam(":ruc_proveedor", $rucProveedor, $rucProveedor === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
       $query->bindParam(":certificado_password", $data['config_fe_certificado_password'], PDO::PARAM_STR);
       $query->bindParam(":certificado_fecha_caducidad", $data['config_fe_certificado_fecha_caducidad'], PDO::PARAM_STR);
       $query->bindParam(":ambiente", $data['config_fe_ambiente'], PDO::PARAM_STR);

@@ -63,6 +63,7 @@ function cargarConfiguracion() {
         $("#config_fe_contribuyente_rimpe").val(
           config.config_fe_contribuyente_rimpe,
         );
+        $("#config_fe_ruc_proveedor").val(config.config_fe_ruc_proveedor || "");
 
         // Certificado
         if (config.config_fe_certificado_nombre) {
